@@ -1,0 +1,2 @@
+# Source files: LF in the repo and in the working tree (Docker/Linux reads them too).
+* text=auto eol=lf

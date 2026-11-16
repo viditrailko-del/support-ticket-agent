@@ -1,0 +1,23 @@
+[project]
+name = "support-ticket-agent"
+version = "0.1.0"
+description = "Support ticket agent with tool calls, code-checked guardrails, human approval and an eval harness"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.115",
+    "sqlalchemy>=2.0.36",
+    "psycopg[binary]>=3.2",
+    "alembic>=1.14",
+    "pydantic-settings>=2.6",
+    "google-genai>=3.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "httpx>=0.28",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::SyntaxWarning"]  # noise from the google-genai SDK, not our code

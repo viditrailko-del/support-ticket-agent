@@ -1,0 +1,17 @@
+# secrets
+.env
+
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# eval outputs (raw LLM outputs and tool calls)
+eval/results/
+
+# editors / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

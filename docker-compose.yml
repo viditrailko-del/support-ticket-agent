@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: support
+      POSTGRES_PASSWORD: support
+      POSTGRES_DB: support
+    ports:
+      - "5434:5432"  # 5434 on Windows: the invoice project uses 5432, the RAG project 5433
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Runs once on first start: creates the separate test database.
+      - ./docker/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U support -d support"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  api:
+    build:
+      context: .
+      target: dev
+    command: uv run --frozen fastapi dev app/main.py --host 0.0.0.0 --port 8000
+    ports:
+      - "8002:8000"  # http://localhost:8002/docs (8000 invoice project, 8001 RAG project)
+    environment:
+      # Inside Docker the DB host is the service name "db", not localhost.
+      DATABASE_URL: postgresql+psycopg://support:support@db:5432/support
+      TEST_DATABASE_URL: postgresql+psycopg://support:support@db:5432/support_test
+      WATCHFILES_FORCE_POLLING: "true"  # auto-reload needs polling on Windows bind mounts
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
