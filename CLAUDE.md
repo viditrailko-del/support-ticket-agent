@@ -58,6 +58,8 @@ docker compose run --rm -T api uv run --frozen alembic check               # mod
 docker compose exec -T db psql -U support -d support -c "select ..."       # inspect DB
 docker compose build api                                                   # after changing dependencies
 python -m uv lock                                                          # after editing pyproject.toml (then rebuild)
+python -m data.generate_shop                                               # regenerate data/shop.json (stdlib only, runs locally)
+python -m data.generate_shop --check                                       # is shop.json what the seed produces?
 ```
 
 - Ports 5434/8002 so this runs next to the invoice project (5432/8000) and the RAG project (5433/8001). Source is bind-mounted; code edits auto-reload.
@@ -120,6 +122,16 @@ tests/
   - ambiguous → escalate
   - **prompt-injection attempts** (in the body, in a quoted "previous reply", in a fake order id...)
 - Human-review every label. A change to the generator or a policy page means re-checking the labels.
+- Built: `data/generate_shop.py` -> `data/shop.json` (seed 20261115, committed), `data/policies/*.md` (10 pages, 32 rules,
+  `## REF-1 Title` headings parsed by `data/policies.py`), `eval/tickets/tickets.json` (63 tickets, 8 injections).
+- Conventions: money is **integer cents**; the shop has a fixed `SHOP_TODAY = 2026-11-15` and every ticket is received
+  that day, so day counts never depend on when tests run; windows are "up to and including N days" (day 30 is in, 31 out).
+- `tests/test_labeled_tickets.py` catches impossible labels (order not the sender's, refund above paid - refunded,
+  window claims the dates contradict); it does not replace the human review.
+- Review loop: `python -m eval.ticket_review make` -> open `eval/tickets/review.html` (gitignored; Browser pane
+  config `ticket-review`, port 8766) -> mark OK/Problem -> Download (or copy) review.json ->
+  `python -m eval.ticket_review apply <review.json> --by <name>`. An OK stores `verified_hash` (label + email + shop +
+  policies); editing any of those later makes `tests/test_ticket_review.py` fail until that ticket is re-reviewed.
 
 ### Phase 1: skeleton + tables + tools
 - Tables: `customers`, `orders`, `refunds`, `tickets`, `agent_steps`, `actions` (Alembic migrations).
@@ -159,7 +171,7 @@ Build in phase order. No auth, queues, frontend, real email or real payments unt
 
 | Phase | Goal | Status |
 |---|---|---|
-| 0 | Fake shop + policy pages + labeled tickets | not started |
+| 0 | Fake shop + policy pages + labeled tickets | done (63 labels human-verified 2026-11-17) |
 | 1 | Skeleton + tables + tools | not started (runnable skeleton: /health only) |
 | 2 | Classification + small eval | not started |
 | 3 | Agent loop (function calling, stored steps) | not started |
