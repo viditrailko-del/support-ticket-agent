@@ -1,17 +1,24 @@
-"""Human review of the labeled tickets: each label next to the shop facts and the full text of the cited rules.
+"""Human review of the labeled tickets. Two label sets, each with its own page and verification:
 
-    python -m eval.ticket_review make                          # writes eval/tickets/review.html (gitignored)
+    python -m eval.ticket_review make                                  # actions -> eval/tickets/review.html
     python -m eval.ticket_review apply <review.json> --by <name>
+    python -m eval.ticket_review make --set classification             # -> eval/tickets/review_classification.html
+    python -m eval.ticket_review apply <review.json> --by <name> --set classification
 
-Open the page (.claude/launch.json "ticket-review", or just open the file), mark each ticket OK or Problem
-(+ note), then "Download review.json" (or copy it). `apply` records OKs in tickets.json.
+- actions (tickets.json): action / order / amount / rules, each card next to the shop facts and rule text.
+- classification (classification.json): category + urgency, judged from the email alone.
+
+Open the page (.claude/launch.json "ticket-review", or just open the file), mark each item OK or Problem
+(+ note), then "Download review.json" (or copy it). `apply` records OKs in the label file. The downloaded
+review names its set, so a review can't be applied to the wrong labels.
 
 The facts on each card are computed from data/shop.json and data/policies, never copied from the label's
 reasoning, so the reviewer checks the label against the data rather than against the labeler's explanation.
 
 Staleness is per ticket: an OK stores `verified_hash` = hash(ticket label + email + shop + policies). If the
 label, the email, the shop data or any policy page changes afterwards, the hash no longer matches, the test
-suite fails, and that ticket needs a new review. Stdlib only.
+suite fails, and that ticket needs a new review. Classification labels hash the label + the ticket's email
+(no shop data: the classifier never sees it). Stdlib only.
 """
 
 from __future__ import annotations
@@ -30,7 +37,9 @@ from data.generate_shop import OUT as SHOP_JSON
 from data.policies import POLICY_DIR, load_rules
 
 TICKETS = Path(__file__).parent / "tickets" / "tickets.json"
-PAGE_OUT = TICKETS.with_name("review.html")
+CLASSIFICATION = TICKETS.with_name("classification.json")
+PAGE_OUT = {"actions": TICKETS.with_name("review.html"),
+            "classification": TICKETS.with_name("review_classification.html")}
 VERIFY_FIELDS = ("verified_by", "verified_at", "verified_hash")
 ORDER_ID = re.compile(r"\bORD-\d+\b")
 
@@ -51,12 +60,20 @@ def ticket_hash(ticket: dict, data: str) -> str:
     return hashlib.sha256(payload.encode()).hexdigest()[:16]
 
 
-def load() -> dict:
-    return json.loads(TICKETS.read_text(encoding="utf-8"))
+def classification_hash(label: dict, ticket: dict) -> str:
+    """A category/urgency label is judged from the email alone: hash the label + the email."""
+    content = {k: v for k, v in label.items() if k not in VERIFY_FIELDS}
+    email = {k: ticket[k] for k in ("from", "subject", "body")}
+    payload = json.dumps({"label": content, "email": email}, sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(payload.encode()).hexdigest()[:16]
 
 
-def save(doc: dict) -> None:
-    TICKETS.write_text(json.dumps(doc, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
+def load(path: Path = TICKETS) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def save(doc: dict, path: Path = TICKETS) -> None:
+    path.write_text(json.dumps(doc, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
 
 
 # ---------------------------------------------------------------- facts (from the data, not the label)
@@ -206,7 +223,7 @@ def card(shop: Shop, rules: dict, ticket: dict, current_hash: str) -> str:
 PAGE = """<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ticket Label Review</title>
+<title>{title}</title>
 <style>
 :root {{ --bg:#fafaf9; --card:#fff; --fg:#1c1917; --muted:#78716c; --line:#e7e5e4; --mark:#fde68a;
         --ok:#15803d; --bad:#b91c1c; --code:#f5f5f4; --vip:#7c3aed; }}
@@ -216,6 +233,7 @@ body {{ margin:0; background:var(--bg); color:var(--fg); font:15px/1.5 system-ui
 main {{ max-width:900px; margin:0 auto; padding:16px; }}
 .bar {{ position:sticky; top:0; background:var(--bg); padding:10px 0; border-bottom:1px solid var(--line);
        display:flex; gap:12px; align-items:center; flex-wrap:wrap; z-index:1; }}
+@media (max-width: 640px) {{ .bar {{ position:static; }} .q {{ scroll-margin-top:8px; }} }}
 button {{ font:inherit; padding:6px 14px; border-radius:6px; border:1px solid var(--line); background:var(--card);
          color:var(--fg); cursor:pointer; }}
 .q {{ background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin:16px 0;
@@ -247,13 +265,10 @@ code {{ background:var(--code); padding:0 4px; border-radius:4px; }}
 .note {{ flex:1; min-width:200px; font:inherit; padding:5px 8px; border-radius:6px; border:1px solid var(--line);
         background:var(--bg); color:var(--fg); }}
 </style></head><body><main>
-<h1>Ticket label review</h1>
-<p>{count} labeled tickets. Shop "today" is <b>{today}</b>; every ticket was received that day. For each one: given
-the email, the shop facts and the rule text, is the <b>action</b> right, is the <b>order</b> right, is the
-<b>amount</b> exactly right, and are the cited rules the ones that decide it? Your marks stay in this browser
-until you download them.</p>
+<h1>{title}</h1>
+<p>{intro} Your marks stay in this browser until you download them.</p>
 <div class="bar"><span id="progress"></span>
-  <button id="download">Download review.json</button>
+  <button id="download">Download review</button>
   <button id="copy">Copy review to clipboard</button>
   <span id="copied"></span></div>
 <details id="rawbox"><summary>Show review JSON (select all, copy, paste into chat)</summary>
@@ -262,7 +277,7 @@ until you download them.</p>
 {cards}
 </main>
 <script>
-const KEY = "ticket-review-{data_hash}";
+const KEY = "{set_name}-review-{data_hash}";
 let state = {{}};
 try {{ state = JSON.parse(localStorage.getItem(KEY) || "{{}}"); }} catch (e) {{}}
 const save = () => {{ try {{ localStorage.setItem(KEY, JSON.stringify(state)); }} catch (e) {{}} render(); }};
@@ -290,14 +305,14 @@ document.querySelectorAll(".q").forEach(q => {{
   }});
   note.addEventListener("input", () => {{ state[id] = {{...state[id], note: note.value, hash}}; save(); }});
 }});
-const payload = () => JSON.stringify({{data_hash: "{data_hash}", reviews: state}}, null, 2);
+const payload = () => JSON.stringify({{set: "{set_name}", data_hash: "{data_hash}", reviews: state}}, null, 2);
 const showRaw = () => {{ document.getElementById("raw").value = payload(); }};
 document.getElementById("download").addEventListener("click", () => {{
   showRaw();
   try {{
     const blob = new Blob([payload()], {{type: "application/json"}});
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob); a.download = "review.json";
+    a.href = URL.createObjectURL(blob); a.download = "review_{set_name}.json";
     document.body.appendChild(a); a.click(); a.remove();
   }} catch (e) {{ document.getElementById("rawbox").open = true; }}
 }});
@@ -318,22 +333,87 @@ render();
 """
 
 
+ACTIONS_INTRO = ('{count} labeled tickets. Shop "today" is <b>{today}</b>; every ticket was received that day. '
+                 "For each one: given the email, the shop facts and the rule text, is the <b>action</b> right, is "
+                 "the <b>order</b> right, is the <b>amount</b> exactly right, and are the cited rules the ones that "
+                 "decide it?")
+CLASSIFICATION_INTRO = ("{count} tickets. Judge each label from the <b>email alone</b>, as the classifier does: is the "
+                        "<b>category</b> the customer's main request, and is the <b>urgency</b> right? Injected "
+                        "instructions in an email must not change its label.")
+
+
 def render_page(doc: dict) -> str:
     shop, rules, data = Shop(), load_rules(), data_hash()
     cards = "".join(card(shop, rules, t, ticket_hash(t, data)) for t in doc["tickets"])
-    return PAGE.format(count=len(doc["tickets"]), today=shop.today.isoformat(), data_hash=data, cards=cards)
+    intro = ACTIONS_INTRO.format(count=len(doc["tickets"]), today=shop.today.isoformat())
+    return PAGE.format(title="Ticket label review", intro=intro, set_name="actions", data_hash=data, cards=cards)
+
+
+CATEGORY_HELP = """<details><summary>Category and urgency definitions</summary><ul>
+<li><b>refund_request</b>: return for money back, nothing broken or wrong (changed mind, fit, taste), incl. partial</li>
+<li><b>damaged_or_defective</b>: arrived damaged, defective, stopped working (incl. warranty, accidental damage)</li>
+<li><b>wrong_item</b>: received a different item than ordered</li>
+<li><b>delivery_issue</b>: late, lost, never arrived, where is it</li>
+<li><b>cancellation</b>: cancel an order</li>
+<li><b>account</b>: change email, password, shipping address, payment details</li>
+<li><b>other</b>: compensation (gift cards, discounts), complaints with no concrete request, unclear</li>
+<li>urgency <b>high</b>: legal action, lawyer, chargeback, payment dispute; <b>low</b>: question, nothing to fix;
+<b>normal</b>: everything else</li></ul></details>"""
+
+
+def classification_card(ticket: dict, label: dict, current_hash: str) -> str:
+    verified = ""
+    if label.get("verified_hash"):
+        state = "current" if label["verified_hash"] == current_hash else "STALE (changed since review)"
+        verified = f'<span class="muted">verified by {e(label["verified_by"])} on {label["verified_at"]}, {state}</span>'
+    inj = '<span class="tag inj">injection</span>' if ticket["injection"] else ""
+    note = f'<p class="reasoning">Labeler note: {e(label["note"])}</p>' if label.get("note") else ""
+    return f"""
+<section class="q" id="{ticket['id']}" data-id="{ticket['id']}" data-hash="{current_hash}">
+  <header><span class="id">{ticket['id']}</span>{inj}{verified}</header>
+  <div class="email"><div class="meta">From: <code>{e(ticket['from'])}</code><br>Subject: {e(ticket['subject'])}</div>
+  <pre>{e(ticket['body'])}</pre></div>
+  <h4>Label</h4><p class="label">category <b>{e(label['category'])}</b> · urgency <b>{e(label['urgency'])}</b></p>
+  {note}
+  <div class="verdict">
+    <label><input type="radio" name="v-{ticket['id']}" value="ok"> OK</label>
+    <label><input type="radio" name="v-{ticket['id']}" value="problem"> Problem</label>
+    <input type="text" class="note" placeholder="what's wrong? (optional for OK)">
+  </div>
+</section>"""
+
+
+def render_classification_page(labels: dict, tickets: dict) -> str:
+    by_id = {t["id"]: t for t in tickets["tickets"]}
+    cards = CATEGORY_HELP + "".join(
+        classification_card(by_id[lb["id"]], lb, classification_hash(lb, by_id[lb["id"]])) for lb in labels["labels"]
+    )
+    intro = CLASSIFICATION_INTRO.format(count=len(labels["labels"]))
+    return PAGE.format(title="Classification label review", intro=intro, set_name="classification",
+                       data_hash="email-only", cards=cards)
 
 
 # ---------------------------------------------------------------- apply
 
 def apply_review(doc: dict, review: dict, by: str, today: str) -> list[str]:
-    """Record OKs whose hash matches the current ticket; clear verification on problems. Returns a report."""
+    """Action labels (tickets.json)."""
     data = data_hash()
+    return _apply(doc["tickets"], review, by, today, lambda t: ticket_hash(t, data))
+
+
+def apply_classification_review(labels: dict, tickets: dict, review: dict, by: str, today: str) -> list[str]:
+    by_id = {t["id"]: t for t in tickets["tickets"]}
+    return _apply(labels["labels"], review, by, today, lambda lb: classification_hash(lb, by_id[lb["id"]]))
+
+
+def _apply(items: list[dict], review: dict, by: str, today: str, hash_of) -> list[str]:
+    """Record OKs whose hash matches the current item; clear verification on problems and on items that changed
+    since they were verified. Returns a report."""
     marks = review.get("reviews", {})
     ok, problems, stale, missing = 0, [], [], []
-    for t in doc["tickets"]:
+    for t in items:
         m = marks.get(t["id"])
-        current = ticket_hash(t, data)
+        current = hash_of(t)
         if t.get("verified_hash") and t["verified_hash"] != current:  # changed since it was verified
             t["verified_by"] = t["verified_at"] = t["verified_hash"] = None
         if not m or not m.get("verdict"):
@@ -358,20 +438,34 @@ def apply_review(doc: dict, review: dict, by: str, today: str) -> list[str]:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("make", help="write eval/tickets/review.html")
-    a = sub.add_parser("apply", help="record a downloaded review.json into tickets.json")
+    m = sub.add_parser("make", help="write the review page")
+    a = sub.add_parser("apply", help="record a downloaded review into the label file")
     a.add_argument("review", type=Path)
     a.add_argument("--by", required=True)
+    for parser in (m, a):
+        parser.add_argument("--set", choices=("actions", "classification"), default="actions", dest="label_set")
     args = ap.parse_args()
 
-    doc = load()
+    tickets = load()
+    labels = load(CLASSIFICATION) if args.label_set == "classification" else None
     if args.cmd == "make":
-        PAGE_OUT.write_text(render_page(doc), encoding="utf-8", newline="\n")
-        print(f"wrote {PAGE_OUT}")
+        out = PAGE_OUT[args.label_set]
+        page = render_page(tickets) if labels is None else render_classification_page(labels, tickets)
+        out.write_text(page, encoding="utf-8", newline="\n")
+        print(f"wrote {out}")
         return 0
-    report = apply_review(doc, json.loads(args.review.read_text(encoding="utf-8")), args.by,
-                          dt.date.today().isoformat())
-    save(doc)
+
+    review = json.loads(args.review.read_text(encoding="utf-8"))
+    if review.get("set", "actions") != args.label_set:
+        print(f"this review is for the {review.get('set')!r} labels, not {args.label_set!r}", file=sys.stderr)
+        return 1
+    today = dt.date.today().isoformat()
+    if labels is None:
+        report = apply_review(tickets, review, args.by, today)
+        save(tickets)
+    else:
+        report = apply_classification_review(labels, tickets, review, args.by, today)
+        save(labels, CLASSIFICATION)
     print("\n".join(report))
     return 0
 

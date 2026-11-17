@@ -2,6 +2,7 @@
 
 import uuid
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Any
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
@@ -29,12 +30,17 @@ class StepOut(BaseModel):
     seq: int
     kind: str
     model: str | None
+    prompt_version: str | None
     tool_name: str | None
     tool_args: dict[str, Any] | None
     tool_result: dict[str, Any] | None
     raw_output: str | None
     error: str | None
     latency_ms: int | None
+    input_tokens: int | None
+    output_tokens: int | None
+    thinking_tokens: int | None
+    cost_usd: Decimal | None
     created_at: datetime
 
     @classmethod
@@ -60,6 +66,7 @@ class ActionOut(BaseModel):
 class TicketOut(BaseModel):
     id: uuid.UUID
     status: str
+    failure_reason: str | None
     from_email: str
     subject: str
     body: str
@@ -79,7 +86,7 @@ class TicketOut(BaseModel):
     @classmethod
     def from_ticket(cls, t: Ticket) -> "TicketOut":
         return cls(
-            id=t.id, status=t.status, from_email=t.from_email, subject=t.subject, body=t.body,
+            id=t.id, status=t.status, failure_reason=t.failure_reason, from_email=t.from_email, subject=t.subject, body=t.body,
             received_at=t.received_at, customer_id=t.customer_id, category=t.category, urgency=t.urgency,
             prompt_version=t.prompt_version, policy_version=t.policy_version,
             steps=[StepOut.from_row(s) for s in t.steps], proposal=t.proposal, flags=t.flags or [],

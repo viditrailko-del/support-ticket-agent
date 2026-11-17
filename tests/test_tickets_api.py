@@ -21,14 +21,15 @@ def post(client, **over):
     return client.post("/tickets", json=body)
 
 
-def test_post_matches_the_sender_and_returns_an_empty_trace(client):
+def test_post_matches_the_sender_classifies_and_proposes(client):
     r = post(client)
     assert r.status_code == 201
     t = r.json()
-    assert t["customer_id"] == "C0029" and t["status"] == "received"
+    assert t["customer_id"] == "C0029" and t["status"] == "proposed"
     assert t["received_at"].startswith("2026-11-15T09:30:00")
-    assert t["steps"] == [] and t["actions"] == [] and t["flags"] == []
-    assert t["proposal"] is None and t["decision"] is None and t["category"] is None
+    assert [s["kind"] for s in t["steps"]] == ["classify", "model"] and t["category"] == "refund_request"
+    assert t["proposal"]["action"] == "reply_only" and t["failure_reason"] is None
+    assert t["actions"] == [] and t["flags"] == [] and t["decision"] is None
 
 
 def test_get_returns_the_same_ticket(client):
@@ -47,7 +48,7 @@ def test_sender_match_ignores_case(client):
 
 def test_unknown_sender_is_stored_without_customer(client):
     t = post(client, from_email="pat.unknown@example.net").json()
-    assert t["customer_id"] is None and t["status"] == "received"
+    assert t["customer_id"] is None and t["status"] == "proposed"
 
 
 def test_customer_is_matched_from_the_sender_only(client):

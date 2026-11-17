@@ -18,6 +18,22 @@ class Settings(BaseSettings):
     gemini_model: str = "gemini-3.5-flash"
     gemini_fallback_model: str = "gemini-3.5-flash-lite"
     gemini_timeout_s: int = 60
+    gemini_thinking_level: str = "low"  # higher levels were 25-50x slower in the invoice project
+    llm_retry_backoff_s: float = 2.0  # transient errors: wait 2s, 4s before retrying the same model
+
+    # Classification is an easy task: run it on the lite model and keep the main model's small daily
+    # quota for the agent. The main model is the fallback.
+    classify_model: str = "gemini-3.5-flash-lite"
+    classify_fallback_model: str = "gemini-3.5-flash"
+    classify_prompt_version: str = "classify_v1"
+
+    # The agent loop (Phase 3): main model, lite as fallback. ~3-6 calls per ticket, so eval runs mostly
+    # override AGENT_MODEL to the lite model (free tier: ~20 requests/day on the main model).
+    agent_model: str = "gemini-3.5-flash"
+    agent_fallback_model: str = "gemini-3.5-flash-lite"
+    agent_prompt_version: str = "agent_v1"
+    agent_max_steps: int = 6  # model turns per ticket; past it the ticket is failed (step_limit)
+    agent_timeout_s: float = 120.0  # wall clock for the whole loop
 
 
 @lru_cache

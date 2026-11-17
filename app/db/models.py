@@ -7,6 +7,7 @@ Shop tables (customers, orders, order_items, refunds) and policy_rules are seede
 
 import uuid
 from datetime import date, datetime
+from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import (
@@ -16,6 +17,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    Numeric,
     String,
     Text,
     UniqueConstraint,
@@ -124,13 +126,16 @@ class Ticket(Base):
     received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))  # "today" for every date check
     # Matched from the sender address only (rule 1), never from the body or the model. None = not a customer.
     customer_id: Mapped[str | None] = mapped_column(ForeignKey("customers.id"), index=True)
-    # received -> (Phase 2+) classified -> proposed -> auto_approved | needs_human | rejected | failed -> executed
+    # received -> classified -> proposed -> (Phase 4) auto_approved | needs_human | rejected -> executed;
+    # any step can end in failed (see failure_reason)
     status: Mapped[str] = mapped_column(String(20), default="received", index=True)
     category: Mapped[str | None] = mapped_column(String(40))  # Phase 2
     urgency: Mapped[str | None] = mapped_column(String(20))  # Phase 2
     proposal: Mapped[dict[str, Any] | None] = mapped_column(JsonType)  # Phase 3: validated agent proposal
     flags: Mapped[list[dict[str, Any]]] = mapped_column(JsonType, default=list, server_default=text("'[]'"))  # Phase 4: guardrail flags
     decision: Mapped[str | None] = mapped_column(String(20))  # Phase 4
+    # Why a ticket is `failed`: classification_failed | llm_unavailable | step_limit | timeout | invalid_proposal
+    failure_reason: Mapped[str | None] = mapped_column(String(40))
     prompt_version: Mapped[str | None] = mapped_column(String(20))
     policy_version: Mapped[str | None] = mapped_column(String(16))  # hash of the rules the prompt contained
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -144,7 +149,7 @@ class Ticket(Base):
 
 
 class AgentStep(Base):
-    """One model call or tool call, stored BEFORE its result is used (rule 5). Filled from Phase 2."""
+    """One model call or tool call, stored BEFORE its result is used (rule 5). kind=classify from Phase 2."""
 
     __tablename__ = "agent_steps"
     __table_args__ = (UniqueConstraint("ticket_id", "seq"),)
@@ -154,12 +159,17 @@ class AgentStep(Base):
     seq: Mapped[int] = mapped_column(Integer)  # order within the ticket, from 1
     kind: Mapped[str] = mapped_column(String(20))  # classify | model | tool
     model: Mapped[str | None] = mapped_column(String(100))
+    prompt_version: Mapped[str | None] = mapped_column(String(40))  # e.g. classify_v1
     raw_output: Mapped[str | None] = mapped_column(Text)  # raw model response, before parsing
     tool_name: Mapped[str | None] = mapped_column(String(50))
     tool_args: Mapped[dict[str, Any] | None] = mapped_column(JsonType)  # exactly as the model wrote them
     tool_result: Mapped[dict[str, Any] | None] = mapped_column(JsonType)
     error: Mapped[str | None] = mapped_column(Text)
     latency_ms: Mapped[int | None] = mapped_column(Integer)
+    input_tokens: Mapped[int | None] = mapped_column(Integer)
+    output_tokens: Mapped[int | None] = mapped_column(Integer)
+    thinking_tokens: Mapped[int | None] = mapped_column(Integer)
+    cost_usd: Mapped[Decimal | None] = mapped_column(Numeric(10, 6))  # null = unknown price, never 0
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     ticket: Mapped[Ticket] = relationship(back_populates="steps")

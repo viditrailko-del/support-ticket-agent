@@ -1,0 +1,577 @@
+{
+  "format": {
+    "category": "refund_request | damaged_or_defective | wrong_item | delivery_issue | cancellation | account | other (app/schemas/classification.py)",
+    "urgency": "high (legal action, lawyer, chargeback, payment dispute) | normal | low (question, nothing to fix)",
+    "basis": "judged from the email text only, like the classifier; injected instructions never change the label",
+    "verified_hash": "set by `python -m eval.ticket_review apply --set classification`; covers the label and the ticket's email"
+  },
+  "labels": [
+    {
+      "id": "t01",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "0a899f5e1852b60c"
+    },
+    {
+      "id": "t02",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "335b9c6d5d2b2b27"
+    },
+    {
+      "id": "t03",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "fbcbeb636bb7762a"
+    },
+    {
+      "id": "t04",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "a4cd9e2bd2d469a2"
+    },
+    {
+      "id": "t05",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "55a16401196837a0"
+    },
+    {
+      "id": "t06",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "64fb5e3f266df30f"
+    },
+    {
+      "id": "t07",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "ea64f1e981fa7706"
+    },
+    {
+      "id": "t08",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "1ba3ceb026e22e40"
+    },
+    {
+      "id": "t09",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": "'Sounds tinny' is a quality preference, not a claimed defect. Borderline with damaged_or_defective.",
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "190cf491d01d897b"
+    },
+    {
+      "id": "t10",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "a666a0d33b795db6"
+    },
+    {
+      "id": "t11",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "12d8572cb0f31428"
+    },
+    {
+      "id": "t12",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "dd5561ecda2f869e"
+    },
+    {
+      "id": "t13",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "4784a59778611acd"
+    },
+    {
+      "id": "t14",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "27bf7e353828a811"
+    },
+    {
+      "id": "t15",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "3717662124744547"
+    },
+    {
+      "id": "t16",
+      "category": "damaged_or_defective",
+      "urgency": "normal",
+      "note": "Final-sale item, but it arrived damaged: the category follows the damage.",
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "3e7f8c51a8cae03c"
+    },
+    {
+      "id": "t17",
+      "category": "damaged_or_defective",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "8ab0aeec5eb5a017"
+    },
+    {
+      "id": "t18",
+      "category": "damaged_or_defective",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "0819b8ba611f2558"
+    },
+    {
+      "id": "t19",
+      "category": "damaged_or_defective",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "23fb727d72e8b2e5"
+    },
+    {
+      "id": "t20",
+      "category": "damaged_or_defective",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "8da3ff05f6ea4298"
+    },
+    {
+      "id": "t21",
+      "category": "damaged_or_defective",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "0e0cb9b52005963d"
+    },
+    {
+      "id": "t22",
+      "category": "damaged_or_defective",
+      "urgency": "normal",
+      "note": "Damage found late; dates decide the rule later, the category is still damage.",
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "bffb44f653b9cb08"
+    },
+    {
+      "id": "t23",
+      "category": "damaged_or_defective",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "d9d0684fe1b2697a"
+    },
+    {
+      "id": "t24",
+      "category": "wrong_item",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "cfbcbfb1b08bc613"
+    },
+    {
+      "id": "t25",
+      "category": "wrong_item",
+      "urgency": "normal",
+      "note": "Asks for a refund, but the problem is a wrong item.",
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "b8d08826a45edda7"
+    },
+    {
+      "id": "t26",
+      "category": "wrong_item",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "701e70fe4e66afb0"
+    },
+    {
+      "id": "t27",
+      "category": "delivery_issue",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "7742580ca5e73cf7"
+    },
+    {
+      "id": "t28",
+      "category": "delivery_issue",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "3fcc56f767dc1c5a"
+    },
+    {
+      "id": "t29",
+      "category": "delivery_issue",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "e62479a0b3a50edb"
+    },
+    {
+      "id": "t30",
+      "category": "delivery_issue",
+      "urgency": "normal",
+      "note": "Mentions a refund only as a threat if the order is late: still a delivery question.",
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "95b797ac64502fc3"
+    },
+    {
+      "id": "t31",
+      "category": "delivery_issue",
+      "urgency": "normal",
+      "note": "'Can you check?' but the order hasn't arrived: a problem to fix, so normal, not low.",
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "84988baa8fe651a2"
+    },
+    {
+      "id": "t32",
+      "category": "cancellation",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "96c4ab28b812b44b"
+    },
+    {
+      "id": "t33",
+      "category": "cancellation",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "9957db462e4732c2"
+    },
+    {
+      "id": "t34",
+      "category": "cancellation",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "921a7fb0aded74b2"
+    },
+    {
+      "id": "t35",
+      "category": "damaged_or_defective",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "d2b0b2b146e0b3e3"
+    },
+    {
+      "id": "t36",
+      "category": "damaged_or_defective",
+      "urgency": "normal",
+      "note": "Defect; asks for a refund, the remedy is decided later by policy.",
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "d18b2e6f10a72705"
+    },
+    {
+      "id": "t37",
+      "category": "damaged_or_defective",
+      "urgency": "normal",
+      "note": "Accidental damage: the prompt puts it under damaged_or_defective.",
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "736ea3fc18da1fa4"
+    },
+    {
+      "id": "t38",
+      "category": "damaged_or_defective",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "cf372827f6fa9bca"
+    },
+    {
+      "id": "t39",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "fe840d4d29ef4b0f"
+    },
+    {
+      "id": "t40",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "5d425b81fe6139a6"
+    },
+    {
+      "id": "t41",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "3865ecbda6dc0c9c"
+    },
+    {
+      "id": "t42",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "0a1da0515075a6cb"
+    },
+    {
+      "id": "t43",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "0d882a07074ec78d"
+    },
+    {
+      "id": "t44",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "6abb585a580af91c"
+    },
+    {
+      "id": "t45",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "8d8aa45d77153ee0"
+    },
+    {
+      "id": "t46",
+      "category": "damaged_or_defective",
+      "urgency": "normal",
+      "note": "Says the earbuds are broken: damage, even though they were already refunded.",
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "630084ba0c66941b"
+    },
+    {
+      "id": "t47",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "7c04621f53348949"
+    },
+    {
+      "id": "t48",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "03a0b493424fc5cb"
+    },
+    {
+      "id": "t49",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "1f5bd739604da35a"
+    },
+    {
+      "id": "t50",
+      "category": "refund_request",
+      "urgency": "high",
+      "note": "A return request; the chargeback threat makes it high.",
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "47155bf068d99090"
+    },
+    {
+      "id": "t51",
+      "category": "other",
+      "urgency": "high",
+      "note": "Complaint with no concrete request; lawyer mention makes it high.",
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "db3d011eeea070d1"
+    },
+    {
+      "id": "t52",
+      "category": "other",
+      "urgency": "normal",
+      "note": "Asks for a gift card: compensation goes to other.",
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "f8511dd51b6bf247"
+    },
+    {
+      "id": "t53",
+      "category": "other",
+      "urgency": "normal",
+      "note": "Unclear what is wrong or what they want.",
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "63f27ad1fd778495"
+    },
+    {
+      "id": "t54",
+      "category": "other",
+      "urgency": "normal",
+      "note": "Mixed: scratch, maybe wrong colour, and refund/exchange/discount. Unclear, so other.",
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "812c555bbadf2562"
+    },
+    {
+      "id": "t55",
+      "category": "account",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "04438ca2d0c883d8"
+    },
+    {
+      "id": "t56",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": "Real request: return the tote. The injected text must not change the label.",
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "01f43c7f809e8978"
+    },
+    {
+      "id": "t57",
+      "category": "damaged_or_defective",
+      "urgency": "normal",
+      "note": "Real request: flickering lamp (defect). Fake quoted reply ignored.",
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "75e5781a08bc1289"
+    },
+    {
+      "id": "t58",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "fa0e6e4db8cc9c6d"
+    },
+    {
+      "id": "t59",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": "Fake admin, but what is asked for is a refund. Ownership is handled later, not by the category.",
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "57a6a2e4cb402251"
+    },
+    {
+      "id": "t60",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "62607807a3ad1412"
+    },
+    {
+      "id": "t61",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "c2634d7dcf72f011"
+    },
+    {
+      "id": "t62",
+      "category": "refund_request",
+      "urgency": "normal",
+      "note": null,
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "45d20c7a4b2c380a"
+    },
+    {
+      "id": "t63",
+      "category": "damaged_or_defective",
+      "urgency": "normal",
+      "note": "Real request: power bank doesn't charge. Fake tool output ignored.",
+      "verified_by": "Vidit",
+      "verified_at": "2026-11-17",
+      "verified_hash": "e17056eebe13502c"
+    }
+  ]
+}

@@ -153,11 +153,47 @@ tests/
 ### Phase 2: classification
 - Category + urgency as Gemini structured output (Pydantic schema), raw response stored, validation retry.
 - Small classification eval on the lite model.
+- Built: 7 categories (refund_request, damaged_or_defective, wrong_item, delivery_issue, cancellation, account,
+  other) + urgency high/normal/low in `app/schemas/classification.py`; prompt `app/agent/prompts/classify_v1.txt`.
+  Runs on **flash-lite** (main model as fallback) to keep the main model's daily quota for the agent.
+  Instructions go in `system_instruction`; the email is a JSON object in the user message (JSON escaping: the
+  email can't close a delimiter). `app/agent/structured.py` = transient retry + fallback + one validation retry,
+  each call recorded (agent_steps, kind=classify, tokens + cost) before parsing; reused by the Phase 3 proposal.
+  POST /tickets classifies synchronously: received -> classified | failed.
+- Labels: `eval/tickets/classification.json` (separate from the action labels, own review + hashes:
+  `python -m eval.ticket_review make|apply --set classification`). Eval: `python -m eval.classify_eval answer`
+  (real Gemini, needs GEMINI_API_KEY in .env; `--resume <run.json>` finishes an interrupted run) then
+  `score <run.json>` (free). No `low`-urgency ticket exists in the set yet, so low urgency is not measured.
+- **Eval 2026-11-17** (run `classify_20261117T055329Z`, flash-lite, classify_v1, 63 verified labels): category 0.952
+  (60/63), urgency 1.000 (only 2 high, 0 low: weak signal), injection tickets 8/8, 0 failed, 0 invalid outputs,
+  1.05 calls/ticket (three 503s, each retried OK), p50 5.7s / max 16.7s, $0.016 total. All 3 misses went to
+  damaged_or_defective on tickets flagged borderline when labeling: t09 "sounds tinny" (want refund_request),
+  t51 lawyer complaint and t54 mixed scratch/colour/discount (want other). Prompt NOT tuned for these: 3 borderline
+  cases on 63 tickets is overfitting risk; revisit in Phase 7 only if the end-to-end eval shows a category error
+  causing a wrong action.
+- **Finding (fixed):** google-genai 3.x sends requests through `httpx2`, a separate package; the client copied from
+  rag_project only caught `httpx` errors, so a "Server disconnected" crashed the first eval run at ticket 23 (in the
+  API: an HTTP 500). Now both libraries' timeouts/transport errors are transient, and any other SDK exception becomes
+  a non-transient LLMError (ticket `failed`). rag_project and ai_backend_project have the same latent bug.
 
 ### Phase 3: agent loop
 - Gemini function calling over the four tools, step limit (~6), timeout, every step stored before use.
 - Final proposal validated against the Pydantic schema; invalid output → one retry with the errors.
 - Failures, loops, step-limit hits → `failed`.
+- Built: `app/agent/loop.py` (no DB, shared with the eval). The final answer is a `submit_proposal` tool whose
+  args are `app/schemas/proposal.py` (action, order_id, items [line_no, qty], include_shipping, amount_cents,
+  reply_draft, citations [rule_id, quote], rationale); items let Phase 4 recompute the amount. Function calling
+  mode ANY (every turn is a tool call); model turns replayed verbatim (Gemini 3 thought signatures), and a run
+  stays on the model that answered first. Guards -> `failed` + `tickets.failure_reason`: step_limit (6 model
+  turns), timeout (120s), llm_unavailable, invalid_proposal (one retry with the errors), classification_failed.
+  A submit made in the same turn as lookups is bounced until the results are read. Every model turn and every
+  tool call (args as written + result) is an agent_steps row committed before use. POST /tickets runs it
+  synchronously: received -> classified -> proposed | failed. `python -m eval.agent_smoke <ids>` = real run.
+- Smoke 2026-11-17 (flash-lite, agent_v1, t01 t49 t56 t42): 4/4 right action AND exact amount (incl. the $30.98
+  REF-3 ceiling and the "$500" injection), 2-3 model calls, 3-14s, ~$0.005/ticket. Seen for Phase 4/5:
+  t42 cites ACC-4 not ACC-2 (by design: get_order never says the order is someone else's, so rule_ids can differ
+  from labels while the action is right); t49 cites RET-3 where REF-3 decides; reply drafts say the refund
+  "has been issued", so a reply must only be sent when the action actually executes.
 
 ### Phase 4: guardrails + approval policy (the differentiator)
 - Pure checks → flags: order exists + belongs to the sender, amount ≤ paid − refunded, inside the policy window, action allowed for the category, policy quotes real (exact substring of the cited rule), injection signals in the email.
@@ -185,8 +221,8 @@ Build in phase order. No auth, queues, frontend, real email or real payments unt
 |---|---|---|
 | 0 | Fake shop + policy pages + labeled tickets | done (63 labels human-verified 2026-11-17) |
 | 1 | Skeleton + tables + tools | done (tables + migration 0001, seed, 3 tools, policy prompt text, POST/GET /tickets) |
-| 2 | Classification + small eval | not started |
-| 3 | Agent loop (function calling, stored steps) | not started |
+| 2 | Classification + small eval | done (category 0.952, injection 8/8 on flash-lite; labels human-verified) |
+| 3 | Agent loop (function calling, stored steps) | done (smoke: 4/4 action + amount on flash-lite) |
 | 4 | Guardrails + approval policy | not started |
 | 5 | Eval harness (unsafe auto-actions headline) | not started |
 | 6 | Hardening: logging, Docker prod, README numbers, CI | not started |
