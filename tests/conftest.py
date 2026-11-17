@@ -1,6 +1,8 @@
-"""Test setup: a separate `support_test` database, wiped between tests.
+"""Test setup: a separate `support_test` database.
 
-Tests never touch the dev database and never call Gemini (a fake LLM arrives with Phase 2).
+The fake shop and the policy rules are seeded once per session (read-only reference data, identical to the
+dev seed). Ticket tables are wiped after every test. Tests never touch the dev database and never call
+Gemini (a fake LLM arrives with Phase 2).
 """
 
 import os
@@ -12,9 +14,10 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import Settings, get_settings
-from app.db.models import Base
+from app.db.models import AgentStep, Action, Base, Ticket
 from app.db.session import get_db
 from app.main import app
+from data.seed import seed
 
 TEST_DB_URL = os.environ.get(
     "TEST_DATABASE_URL", "postgresql+psycopg://support:support@localhost:5434/support_test"
@@ -36,6 +39,8 @@ test_settings.__test__ = False  # a helper, not a test
 def _schema() -> Iterator[None]:
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
+    with TestSession() as s:
+        seed(s)
     yield
     Base.metadata.drop_all(engine)
 
@@ -43,10 +48,10 @@ def _schema() -> Iterator[None]:
 @pytest.fixture(autouse=True)
 def _clean_tables() -> Iterator[None]:
     yield
-    tables = ", ".join(t.name for t in Base.metadata.sorted_tables)
-    if tables:  # no tables before Phase 1
-        with engine.begin() as conn:
-            conn.execute(text(f"TRUNCATE {tables} CASCADE"))
+    # Only what tests create. Shop/policy tables stay seeded; a test that must change them restores them.
+    tables = ", ".join(m.__tablename__ for m in (Ticket, AgentStep, Action))
+    with engine.begin() as conn:
+        conn.execute(text(f"TRUNCATE {tables} CASCADE"))
 
 
 @pytest.fixture

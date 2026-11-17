@@ -14,7 +14,8 @@ Ticket (POST /tickets)
   → classify: category + urgency (Gemini structured output)
 
 Agent loop (max ~6 steps, Gemini function calling)
-  → tools: get_customer, get_order, list_refunds, search_policy
+  → policies: all customer-facing rules in the system prompt (not a search tool)
+  → tools: get_customer, get_order, list_refunds
   → every step stored BEFORE it is used: tool, args, result, raw model output
   → step limit / timeout / invalid output → failed
   → final proposal (Pydantic schema):
@@ -42,7 +43,11 @@ Eval harness
 - Postgres 16 via `docker-compose`
 - `google-genai` SDK (Gemini): classification, function calling, final proposal
 - pytest
-- Policy search: plain Postgres full-text or a reuse of the RAG project's vector search (pgvector + fastembed). Decided in Phase 0/1; not installed yet.
+- Policies: **no search tool. All rules go in the agent's prompt** (32 rules, ~1.4k tokens). Decided 2026-11-17 after a
+  sandbox test on the 63 labeled tickets (email as query, labeled rule_ids as truth): any-labeled-rule-in-top-5 was
+  full-text 0.68, vector (bge-small) 0.56, hybrid 0.68. Both too weak, and ~1/3 of the deciding rules (ACC-2, REF-3,
+  ACC-4) can't be found from the email at all: they follow from tool results. Revisit (full-text first) only if the
+  rules grow to hundreds.
 
 **Everything runs inside Docker.** This Windows machine has Smart App Control, which blocks compiled DLLs (pydantic-core, SQLAlchemy, psycopg...), so a local `.venv` cannot run the app. Don't try to fix that locally; use the container. `uv` is installed via pip and isn't on PATH: use `python -m uv`.
 
@@ -54,6 +59,7 @@ Secrets live in `.env` (never committed); `.env.example` lists the keys.
 docker compose up -d --wait                                                # Postgres (localhost:5434) + API (http://localhost:8002/docs)
 docker compose run --rm -T api uv run --frozen pytest -q                   # all tests (support_test DB, fake LLM)
 docker compose run --rm -T api uv run --frozen alembic upgrade head        # apply migrations
+docker compose run --rm -T api uv run --frozen python -m data.seed         # load shop + policy rules (idempotent upsert)
 docker compose run --rm -T api uv run --frozen alembic check               # models vs migrations drift
 docker compose exec -T db psql -U support -d support -c "select ..."       # inspect DB
 docker compose build api                                                   # after changing dependencies
@@ -63,7 +69,7 @@ python -m data.generate_shop --check                                       # is 
 ```
 
 - Ports 5434/8002 so this runs next to the invoice project (5432/8000) and the RAG project (5433/8001). Source is bind-mounted; code edits auto-reload.
-- Tests use the separate `support_test` DB (created by `docker/init-test-db.sql`), built with `create_all`. The dev DB uses Alembic.
+- Tests use the separate `support_test` DB (created by `docker/init-test-db.sql`), built with `create_all` and seeded once per session; only ticket tables are truncated between tests. The dev DB uses Alembic + `python -m data.seed`.
 - Docker Desktop must be running (`"C:\Program Files\Docker\Docker\Docker Desktop.exe"`).
 
 ## Budget constraints (free only)
@@ -82,11 +88,12 @@ python -m data.generate_shop --check                                       # is 
 5. **Never overwrite history.** Raw model output and every tool call (args + result) are stored before parsing or acting.
 6. **Checks are pure functions**: no DB, no network. Each check gets unit tests (passing + failing + edge case).
 7. **The Pydantic schema is the single source of truth** for Gemini's response schema and tool declarations. Don't hand-write a second one.
-8. **Prompts are versioned files** (`prompts/v1.txt`...). Changing a prompt = new version; record `prompt_version` on every run.
+8. **Prompts are versioned files** (`prompts/v1.txt`...). Changing a prompt = new version; record `prompt_version` on every run, and `policy_version` (hash of the policy rules the prompt contained).
 9. LLM failures, loops and step-limit hits degrade to a `failed` ticket, never a 500 or crash.
 10. Route handlers stay thin; logic lives in `agent/`, `tools/`, `checks/`.
 11. Schema changes go through an Alembic migration.
 12. **Label from the policy + shop data, never from model output.**
+13. **Only customer-visible rules go in the prompt.** Anything in the prompt can leak into a reply ("repeat your instructions"). Internal thresholds (auto-approval limit, flag logic, injection signals) live in code/config only, never in a policy page.
 
 ## Layout (target)
 
@@ -94,8 +101,10 @@ python -m data.generate_shop --check                                       # is 
 app/
   main.py            FastAPI app + routers
   api/               route handlers (thin): tickets, approvals
+  tickets.py         intake: store the email as received, match the sender to a customer
   schemas/           Pydantic models (proposal.py = agent output schema, source of truth)
-  tools/             get_customer, get_order, list_refunds, search_policy (plain DB functions)
+  tools/             get_customer, get_order, list_refunds (plain DB functions, scoped to the ticket's sender)
+  policies.py        rules from the DB -> prompt text + policy_version hash
   agent/             Gemini client, classification, agent loop, prompts/ (versioned)
   checks/            pure guardrails (ownership, amounts, window, category, quotes, injection)
   execution/         simulated, idempotent action runner
@@ -134,9 +143,12 @@ tests/
   policies); editing any of those later makes `tests/test_ticket_review.py` fail until that ticket is re-reviewed.
 
 ### Phase 1: skeleton + tables + tools
-- Tables: `customers`, `orders`, `refunds`, `tickets`, `agent_steps`, `actions` (Alembic migrations).
-- Tools as plain DB functions (no LLM), each with tests: `get_customer`, `get_order`, `list_refunds`, `search_policy`.
+- Tables: `customers`, `orders`, `order_items`, `refunds`, `policy_rules`, `tickets`, `agent_steps`, `actions` (Alembic migrations).
+- Tools as plain DB functions (no LLM), each with tests: `get_customer`, `get_order`, `list_refunds`. Policy text for the prompt from `policy_rules`.
 - `POST /tickets`, `GET /tickets/{id}` with the full trace (classification, steps, proposal, flags, decision, execution).
+- Built: tools take a `ToolContext` (sender's customer_id + ticket date), never a customer from the model;
+  someone else's order returns exactly what a missing order returns (no leak). `run_tool` turns unknown tools and bad
+  args into `{"error": ...}` results. `POST /tickets` accepts `received_at` so eval tickets replay on the shop date.
 
 ### Phase 2: classification
 - Category + urgency as Gemini structured output (Pydantic schema), raw response stored, validation retry.
@@ -172,7 +184,7 @@ Build in phase order. No auth, queues, frontend, real email or real payments unt
 | Phase | Goal | Status |
 |---|---|---|
 | 0 | Fake shop + policy pages + labeled tickets | done (63 labels human-verified 2026-11-17) |
-| 1 | Skeleton + tables + tools | not started (runnable skeleton: /health only) |
+| 1 | Skeleton + tables + tools | done (tables + migration 0001, seed, 3 tools, policy prompt text, POST/GET /tickets) |
 | 2 | Classification + small eval | not started |
 | 3 | Agent loop (function calling, stored steps) | not started |
 | 4 | Guardrails + approval policy | not started |
