@@ -199,6 +199,23 @@ tests/
 - Pure checks → flags: order exists + belongs to the sender, amount ≤ paid − refunded, inside the policy window, action allowed for the category, policy quotes real (exact substring of the cited rule), injection signals in the email.
 - Approval policy: auto only for low-risk actions with zero flags (e.g. refund < $50); everything else `needs_human`; impossible actions `rejected`.
 - `approve` / `reject` / `edit` endpoints with an audit trail (who, when, what changed). Execution is idempotent (same action twice → runs once).
+- Built: `app/checks/` (pure: `facts.py` frozen inputs, `rules.py` one function per check, `decide.py`),
+  `app/guardrails.py` (facts from the DB; the order is read WITHOUT the owner filter so "someone else's" and
+  "missing" differ in flags, never in tool results), `app/execution/runner.py`, `app/reviews.py` + `app/api/reviews.py`,
+  table `reviews` + action/ticket columns (migration 0004).
+  Flags have a severity: `reject` (impossible: not the sender's order, unknown line, qty above ordered, nothing left
+  to refund) -> `rejected`; `review` (outside window, final sale, shipping not refundable, amount mismatch, quote not
+  in rule, category mismatch, injection signal, >= `AUTO_LIMIT_CENTS` = $50) -> `needs_human`; `info`
+  (amount capped at paid - refunded, REF-3) changes nothing. Escalate always `needs_human`. Auto-run: refund and
+  replace under $50, reply_only. The refund amount = min(lines + shipping, refundable left), the model's figure is
+  only compared. Statuses: proposed -> auto_approved | needs_human | rejected; needs_human -> approved -> executed
+  (or rejected by a human); edit (whole proposal, amount computed, citations/rationale kept unless given) re-runs
+  checks and always waits for an approve. Execution: one action per ticket (`ticket:<id>` unique key, ticket row
+  locked), checks re-run with the order row locked right before paying; a reject flag or changed amount stops it
+  and sends the ticket back to a human. Executed refunds go into `refunds` (`RF-T...`).
+- Checked on the 63 labels (`tests/test_checks_on_labels.py`, no LLM): a proposal matching each label trips no
+  policy flag; with the label as proposal 39 auto-run, 24 go to a human (12 >= $50, 8 injections, 5 escalations);
+  injection signals = exactly the 8 injection tickets (0 false positives on 55 ordinary emails).
 
 ### Phase 5: eval harness
 `answer` (real Gemini once, freezes raw outputs + tool calls) / `score` (pure, re-runnable, free). Metrics:
@@ -223,7 +240,7 @@ Build in phase order. No auth, queues, frontend, real email or real payments unt
 | 1 | Skeleton + tables + tools | done (tables + migration 0001, seed, 3 tools, policy prompt text, POST/GET /tickets) |
 | 2 | Classification + small eval | done (category 0.952, injection 8/8 on flash-lite; labels human-verified) |
 | 3 | Agent loop (function calling, stored steps) | done (smoke: 4/4 action + amount on flash-lite) |
-| 4 | Guardrails + approval policy | not started |
+| 4 | Guardrails + approval policy | done (pure checks, review endpoints, idempotent execution; labels pass the checks) |
 | 5 | Eval harness (unsafe auto-actions headline) | not started |
 | 6 | Hardening: logging, Docker prod, README numbers, CI | not started |
 | 7 | Fixes driven by the eval | not started |

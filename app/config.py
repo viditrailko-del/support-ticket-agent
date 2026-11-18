@@ -35,6 +35,10 @@ class Settings(BaseSettings):
     agent_max_steps: int = 6  # model turns per ticket; past it the ticket is failed (step_limit)
     agent_timeout_s: float = 120.0  # wall clock for the whole loop
 
+    # Guardrails (Phase 4). Internal: never in a policy page or the prompt (rule 13). A refund or replacement
+    # worth this much or more always needs a human, even with zero flags.
+    auto_limit_cents: int = 5000
+
 
 @lru_cache
 def get_settings() -> Settings:

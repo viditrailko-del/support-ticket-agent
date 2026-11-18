@@ -3,8 +3,9 @@
 The customer match uses the sender address only (rule 1). Nothing in the subject or body, and nothing the
 model writes later, can change which customer's data the tools see.
 
-Status flow so far: received -> classified -> proposed, and any step can end `failed` with a
-`failure_reason`, never an HTTP 500 (rule 9). Phase 4 turns a proposal into a decision.
+Status flow: received -> classified -> proposed -> auto_approved | needs_human | rejected (app/guardrails.py),
+auto_approved -> executed (app/execution). Any step before the checks can end `failed` with a
+`failure_reason`, never an HTTP 500 (rule 9). Human review is in app/reviews.py.
 """
 
 from __future__ import annotations
@@ -24,6 +25,8 @@ from app.agent.loop import TicketInput, run_agent
 from app.agent.structured import Attempt
 from app.config import Settings
 from app.db.models import AgentStep, Customer, Ticket
+from app.execution import execute_ticket
+from app.guardrails import guard_ticket
 from app.logging_setup import log_event
 from app.policies import load_policies
 from app.tools import ToolContext, run_tool
@@ -136,10 +139,13 @@ def receive_ticket(
     db: Session, *, from_email: str, subject: str, body: str, received_at: datetime | None,
     llm: LLMClient, settings: Settings,
 ) -> Ticket:
-    """POST /tickets: store, classify, run the agent. Phase 4 adds the guardrails and the decision here."""
+    """POST /tickets: store, classify, run the agent, run the checks, and execute only if auto-approved."""
     ticket = create_ticket(db, from_email=from_email, subject=subject, body=body, received_at=received_at)
     classify_ticket(db, ticket, llm, settings)
     propose_for_ticket(db, ticket, llm, settings)
+    guard_ticket(db, ticket, settings)
+    if ticket.status == "auto_approved":
+        execute_ticket(db, ticket, settings, approved_by="auto")
     return get_ticket(db, ticket.id)  # type: ignore[return-value]
 
 
@@ -147,6 +153,6 @@ def get_ticket(db: Session, ticket_id: uuid.UUID) -> Ticket | None:
     return db.scalar(
         select(Ticket)
         .where(Ticket.id == ticket_id)
-        .options(selectinload(Ticket.steps), selectinload(Ticket.actions))
+        .options(selectinload(Ticket.steps), selectinload(Ticket.actions), selectinload(Ticket.reviews))
         .execution_options(populate_existing=True)
     )

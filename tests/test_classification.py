@@ -67,7 +67,7 @@ def test_response_schema_comes_from_the_pydantic_model(client, fake_llm):
 def test_invalid_output_is_retried_once_with_the_errors(client, fake_llm):
     fake_llm.replies = ['{"category": "refund", "urgency": "normal", "reason": "x"}', CLASSIFY_JSON]
     t = post(client)
-    assert t["status"] == "proposed" and t["category"] == "refund_request"
+    assert t["status"] == "executed" and t["category"] == "refund_request"
     first, second = classify_steps(t)
     assert first["error"].startswith("validation:") and "refund" in first["raw_output"]  # raw kept as received
     assert second["error"] is None
@@ -96,7 +96,7 @@ def test_invalid_twice_means_failed_with_both_raw_outputs_kept(client, fake_llm,
 def test_transient_error_is_retried_on_the_same_model(client, fake_llm):
     fake_llm.replies = [LLMError("503: overloaded", transient=True), CLASSIFY_JSON]
     t = post(client)
-    assert t["status"] == "proposed"
+    assert t["status"] == "executed"
     assert [c["model"] for c in fake_llm.calls] == ["gemini-3.5-flash-lite"] * 2
     assert t["steps"][0]["error"] == "503: overloaded" and t["steps"][0]["raw_output"] is None
 
@@ -104,7 +104,7 @@ def test_transient_error_is_retried_on_the_same_model(client, fake_llm):
 def test_permanent_error_goes_straight_to_the_fallback(client, fake_llm):
     fake_llm.replies = [LLMError("429: quota exceeded per day", transient=False), CLASSIFY_JSON]
     t = post(client)
-    assert t["status"] == "proposed"
+    assert t["status"] == "executed"
     assert [c["model"] for c in fake_llm.calls] == ["gemini-3.5-flash-lite", "gemini-3.5-flash"]
 
 

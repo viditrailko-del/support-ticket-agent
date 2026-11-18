@@ -126,14 +126,19 @@ class Ticket(Base):
     received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))  # "today" for every date check
     # Matched from the sender address only (rule 1), never from the body or the model. None = not a customer.
     customer_id: Mapped[str | None] = mapped_column(ForeignKey("customers.id"), index=True)
-    # received -> classified -> proposed -> (Phase 4) auto_approved | needs_human | rejected -> executed;
-    # any step can end in failed (see failure_reason)
+    # received -> classified -> proposed -> auto_approved | needs_human | rejected (guardrails)
+    # needs_human -> approved (human) | rejected (human); auto_approved | approved -> executed.
+    # Any step before the guardrails can end in failed (see failure_reason).
     status: Mapped[str] = mapped_column(String(20), default="received", index=True)
     category: Mapped[str | None] = mapped_column(String(40))  # Phase 2
     urgency: Mapped[str | None] = mapped_column(String(20))  # Phase 2
-    proposal: Mapped[dict[str, Any] | None] = mapped_column(JsonType)  # Phase 3: validated agent proposal
-    flags: Mapped[list[dict[str, Any]]] = mapped_column(JsonType, default=list, server_default=text("'[]'"))  # Phase 4: guardrail flags
-    decision: Mapped[str | None] = mapped_column(String(20))  # Phase 4
+    # The current proposal: the agent's, or a reviewer's edit of it (the agent's original stays in agent_steps
+    # and in the first review's proposal_before).
+    proposal: Mapped[dict[str, Any] | None] = mapped_column(JsonType)
+    flags: Mapped[list[dict[str, Any]]] = mapped_column(JsonType, default=list, server_default=text("'[]'"))  # guardrail flags
+    # Guardrail decision on the current proposal: auto_approved | needs_human | rejected | failed
+    decision: Mapped[str | None] = mapped_column(String(20))
+    amount_cents: Mapped[int | None] = mapped_column(Integer)  # refund amount computed by code, never the model's
     # Why a ticket is `failed`: classification_failed | llm_unavailable | step_limit | timeout | invalid_proposal
     failure_reason: Mapped[str | None] = mapped_column(String(40))
     prompt_version: Mapped[str | None] = mapped_column(String(20))
@@ -145,6 +150,9 @@ class Ticket(Base):
     )
     actions: Mapped[list["Action"]] = relationship(
         back_populates="ticket", cascade="all, delete-orphan", order_by="Action.id"
+    )
+    reviews: Mapped[list["Review"]] = relationship(
+        back_populates="ticket", cascade="all, delete-orphan", order_by="Review.id"
     )
 
 
@@ -176,8 +184,8 @@ class AgentStep(Base):
 
 
 class Action(Base):
-    """An action to execute (refund / replace / reply). Filled from Phase 4; the idempotency key makes a
-    second execution of the same action a no-op."""
+    """An executed (simulated) action. One per ticket: the idempotency key is derived from the ticket, and
+    its unique constraint makes a second execution of the same ticket a no-op, even when two run at once."""
 
     __tablename__ = "actions"
 
@@ -188,7 +196,33 @@ class Action(Base):
     amount_cents: Mapped[int | None] = mapped_column(Integer)
     idempotency_key: Mapped[str] = mapped_column(String(100), unique=True)
     status: Mapped[str] = mapped_column(String(20), default="pending")  # pending | executed | cancelled
+    items: Mapped[list[dict[str, Any]]] = mapped_column(JsonType, default=list, server_default=text("'[]'"))
+    reply_text: Mapped[str | None] = mapped_column(Text)  # the email "sent" to the customer
+    approved_by: Mapped[str | None] = mapped_column(String(100))  # "auto" or the reviewer's name
+    result: Mapped[dict[str, Any] | None] = mapped_column(JsonType)  # what the simulated execution did
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     executed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     ticket: Mapped[Ticket] = relationship(back_populates="actions")
+
+
+class Review(Base):
+    """Audit trail: one row per human approve / reject / edit. Append-only."""
+
+    __tablename__ = "reviews"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    ticket_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tickets.id", ondelete="CASCADE"), index=True)
+    reviewer: Mapped[str] = mapped_column(String(100))
+    kind: Mapped[str] = mapped_column(String(10))  # approve | reject | edit
+    note: Mapped[str | None] = mapped_column(Text)
+    proposal_before: Mapped[dict[str, Any] | None] = mapped_column(JsonType)
+    proposal_after: Mapped[dict[str, Any] | None] = mapped_column(JsonType)  # edit only
+    decision_before: Mapped[str | None] = mapped_column(String(20))
+    decision_after: Mapped[str | None] = mapped_column(String(20))  # edit: the checks' decision on the edit
+    flags_after: Mapped[list[dict[str, Any]] | None] = mapped_column(JsonType)
+    status_before: Mapped[str] = mapped_column(String(20))
+    status_after: Mapped[str] = mapped_column(String(20))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    ticket: Mapped[Ticket] = relationship(back_populates="reviews")

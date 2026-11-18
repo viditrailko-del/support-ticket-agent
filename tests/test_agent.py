@@ -37,14 +37,14 @@ def kinds(t):
 def test_lookup_then_proposal_is_stored_with_every_step(client, fake_llm):
     fake_llm.chat_replies = [turn(("get_order", {"order_id": "ORD-10473"})), submit(**REFUND_AVA)]
     t = post(client)
-    assert t["status"] == "proposed" and t["failure_reason"] is None
+    assert t["status"] == "executed" and t["failure_reason"] is None
     assert kinds(t) == ["classify", "model", "tool", "model"]
     tool = t["steps"][2]
     assert tool["tool_name"] == "get_order" and tool["tool_args"] == {"order_id": "ORD-10473"}
     assert tool["tool_result"]["refundable_left_cents"] == 3098  # computed by our code, stored as returned
     assert t["proposal"] == Proposal.model_validate(REFUND_AVA).model_dump(mode="json")
     assert t["prompt_version"] == "agent_v1" and len(t["policy_version"]) == 16
-    assert t["decision"] is None and t["actions"] == []  # proposing executes nothing
+    assert t["decision"] == "auto_approved" and t["actions"][0]["approved_by"] == "auto"  # small, clean: runs
 
 
 def test_raw_model_output_is_stored_for_every_turn(client, fake_llm):
@@ -92,7 +92,7 @@ def test_tools_stay_scoped_to_the_sender(client, fake_llm):
 def test_unknown_tool_is_an_error_result_not_a_crash(client, fake_llm):
     fake_llm.chat_replies = [turn(("issue_refund", {"order_id": "ORD-10473", "amount": 999})), submit()]
     t = post(client)
-    assert t["status"] == "proposed"
+    assert t["status"] == "executed"
     assert "unknown tool" in next(s for s in t["steps"] if s["kind"] == "tool")["tool_result"]["error"]
 
 
@@ -102,7 +102,7 @@ def test_invalid_proposal_gets_one_retry_with_the_errors(client, fake_llm):
     bad = {**REFUND_AVA, "items": []}  # refund without items
     fake_llm.chat_replies = [submit(**bad), submit(**REFUND_AVA)]
     t = post(client)
-    assert t["status"] == "proposed" and t["proposal"]["amount_cents"] == 3098
+    assert t["status"] == "executed" and t["proposal"]["amount_cents"] == 3098
     first_model = next(s for s in t["steps"] if s["kind"] == "model")
     assert first_model["error"].startswith("validation:") and "refund needs order_id, items" in first_model["error"]
     [(_, feedback)] = fake_llm.chat_calls[1]["messages"][-1].results
@@ -120,7 +120,7 @@ def test_submit_together_with_lookups_must_wait_for_their_results(client, fake_l
     fake_llm.chat_replies = [turn(("get_order", {"order_id": "ORD-10473"}), (SUBMIT, REFUND_AVA)),
                              submit(**REFUND_AVA)]
     t = post(client)
-    assert t["status"] == "proposed" and kinds(t) == ["classify", "model", "tool", "model"]
+    assert t["status"] == "executed" and kinds(t) == ["classify", "model", "tool", "model"]
     results = dict((c.name, r) for c, r in fake_llm.chat_calls[1]["messages"][-1].results)
     assert "must be called alone" in results[SUBMIT]["error"] and results["get_order"]["found"] is True
 
@@ -128,7 +128,7 @@ def test_submit_together_with_lookups_must_wait_for_their_results(client, fake_l
 def test_a_turn_without_a_function_call_gets_a_nudge(client, fake_llm):
     fake_llm.chat_replies = [turn(), submit()]
     t = post(client)
-    assert t["status"] == "proposed"
+    assert t["status"] == "executed"
     assert next(s for s in t["steps"] if s["kind"] == "model")["error"] == "no function call"
     assert "Reply with a function call" in fake_llm.chat_calls[1]["messages"][-1].text
 
@@ -164,7 +164,7 @@ def test_run_stays_on_the_model_that_answered_first(client, fake_llm):
     fake_llm.chat_replies = [LLMError("429: quota exceeded per day", transient=False),
                              turn(("get_order", {"order_id": "ORD-10473"})), submit(**REFUND_AVA)]
     t = post(client)
-    assert t["status"] == "proposed"
+    assert t["status"] == "executed"
     assert [c["model"] for c in fake_llm.chat_calls] == [
         "gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.5-flash-lite"]
 

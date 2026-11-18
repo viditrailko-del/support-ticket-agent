@@ -5,9 +5,10 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
-from app.db.models import Action, AgentStep, Ticket
+from app.db.models import Action, AgentStep, Review, Ticket
+from app.schemas.proposal import ActionType, Citation, ProposedItem
 
 
 class TicketIn(BaseModel):
@@ -55,12 +56,54 @@ class ActionOut(BaseModel):
     amount_cents: int | None
     idempotency_key: str
     status: str
+    items: list[dict[str, Any]]
+    reply_text: str | None
+    approved_by: str | None
+    result: dict[str, Any] | None
     created_at: datetime
     executed_at: datetime | None
 
     @classmethod
     def from_row(cls, a: Action) -> "ActionOut":
         return cls.model_validate(a, from_attributes=True)
+
+
+class ReviewOut(BaseModel):
+    id: int
+    reviewer: str
+    kind: str
+    note: str | None
+    proposal_before: dict[str, Any] | None
+    proposal_after: dict[str, Any] | None
+    decision_before: str | None
+    decision_after: str | None
+    flags_after: list[dict[str, Any]] | None
+    status_before: str
+    status_after: str
+    created_at: datetime
+
+    @classmethod
+    def from_row(cls, r: Review) -> "ReviewOut":
+        return cls.model_validate(r, from_attributes=True)
+
+
+class ReviewIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reviewer: str = Field(min_length=1, max_length=100, description="Who is reviewing (no auth yet)")
+    note: str | None = Field(default=None, max_length=2000)
+
+
+class EditIn(ReviewIn):
+    """The new proposal. There is no amount field: a refund amount is always computed from the items."""
+
+    action: ActionType
+    order_id: str | None = Field(default=None, max_length=40)
+    items: list[ProposedItem] = []
+    include_shipping: bool = False
+    reply_draft: str = Field(min_length=1, max_length=3000)
+    citations: list[Citation] | None = Field(default=None, description="Default: keep the current citations")
+    rationale: str | None = Field(default=None, max_length=600, description="Default: keep the current one")
 
 
 class TicketOut(BaseModel):
@@ -80,7 +123,9 @@ class TicketOut(BaseModel):
     proposal: dict[str, Any] | None
     flags: list[dict[str, Any]]
     decision: str | None
+    amount_cents: int | None  # refund amount computed by code
     actions: list[ActionOut]
+    reviews: list[ReviewOut]
     created_at: datetime
 
     @classmethod
@@ -90,5 +135,6 @@ class TicketOut(BaseModel):
             received_at=t.received_at, customer_id=t.customer_id, category=t.category, urgency=t.urgency,
             prompt_version=t.prompt_version, policy_version=t.policy_version,
             steps=[StepOut.from_row(s) for s in t.steps], proposal=t.proposal, flags=t.flags or [],
-            decision=t.decision, actions=[ActionOut.from_row(a) for a in t.actions], created_at=t.created_at,
+            decision=t.decision, amount_cents=t.amount_cents, actions=[ActionOut.from_row(a) for a in t.actions],
+            reviews=[ReviewOut.from_row(r) for r in t.reviews], created_at=t.created_at,
         )

@@ -17,7 +17,7 @@ import json
 
 from app.agent.client import ChatResponse, FunctionCall, LLMError, LLMResponse, ModelTurn, get_llm
 from app.config import Settings, get_settings
-from app.db.models import AgentStep, Action, Base, Ticket
+from app.db.models import AgentStep, Action, Base, Refund, Review, Ticket
 from app.db.session import get_db
 from app.main import app
 from data.seed import seed
@@ -105,9 +105,11 @@ def _schema() -> Iterator[None]:
 def _clean_tables() -> Iterator[None]:
     yield
     # Only what tests create. Shop/policy tables stay seeded; a test that must change them restores them.
-    tables = ", ".join(m.__tablename__ for m in (Ticket, AgentStep, Action))
+    tables = ", ".join(m.__tablename__ for m in (Ticket, AgentStep, Action, Review))
     with engine.begin() as conn:
         conn.execute(text(f"TRUNCATE {tables} CASCADE"))
+        # refunds executed by tests (seeded ones are RF-0001...)
+        conn.execute(text(f"DELETE FROM {Refund.__tablename__} WHERE id LIKE 'RF-T%'"))
 
 
 @pytest.fixture

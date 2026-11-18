@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.api.reviews import router as reviews_router
 from app.api.tickets import router as tickets_router
 from app.config import get_settings
 from app.logging_setup import adopt_uvicorn_loggers, configure_logging, log_event
@@ -29,6 +30,7 @@ app = FastAPI(
 
 
 app.include_router(tickets_router)
+app.include_router(reviews_router)
 
 
 @app.get("/health", tags=["meta"])
