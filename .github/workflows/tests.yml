@@ -1,0 +1,56 @@
+# Runs everything exactly as it runs locally: inside the dev container, against Postgres from
+# docker-compose. Tests never call Gemini (fake LLM), so no secrets are needed.
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      COMPOSE_PROJECT_NAME: support  # fixed network name (support_default), whatever the repo is called
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Stdlib-only: the committed shop is exactly what the seeded generator produces (the labels depend on it).
+      - name: Verify the fake shop snapshot
+        run: python -m data.generate_shop --check
+
+      - name: Build dev image
+        run: docker compose build api
+
+      - name: Start Postgres
+        run: docker compose up -d --wait db
+
+      # Includes the guardrail checks against the 63 human-verified labels and the label review hashes.
+      - name: Run tests
+        run: docker compose run --rm -T api uv run --frozen pytest -q
+
+      - name: Migrations apply and match the models
+        run: |
+          docker compose run --rm -T api uv run --frozen alembic upgrade head
+          docker compose run --rm -T api uv run --frozen alembic check
+
+      - name: Build production image
+        run: docker build -t support-agent-api .
+
+      - name: Production image serves /health with JSON logs only
+        run: |
+          docker run -d --name prod --network support_default -p 8000:8000 \
+            -e DATABASE_URL=postgresql+psycopg://support:support@db:5432/support support-agent-api
+          for i in $(seq 1 30); do curl -sf localhost:8000/health && break; sleep 1; done
+          curl -sf localhost:8000/health
+          docker logs prod 2>&1 | python -c "import json,sys; [json.loads(l) for l in sys.stdin if l.strip()]"
+
+      - name: Show logs on failure
+        if: failure()
+        run: |
+          docker compose logs db
+          docker logs prod || true

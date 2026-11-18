@@ -46,4 +46,6 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=4)"]
 # Migrations are a separate deploy step (`alembic upgrade head`), not run on every start.
-CMD ["fastapi", "run", "app/main.py", "--host", "0.0.0.0", "--port", "8000"]
+# uvicorn directly (not `fastapi run`) with a JSON log config, so even the server's first lines, before the
+# app has configured logging, are JSON: the whole stream is one JSON object per line.
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers",      "--log-config", "app/uvicorn_log.json"]

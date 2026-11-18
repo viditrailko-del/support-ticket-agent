@@ -15,6 +15,7 @@ import time
 import uuid
 from collections.abc import Callable
 from datetime import UTC, datetime
+from decimal import Decimal
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
@@ -140,13 +141,36 @@ def receive_ticket(
     llm: LLMClient, settings: Settings,
 ) -> Ticket:
     """POST /tickets: store, classify, run the agent, run the checks, and execute only if auto-approved."""
+    started = time.monotonic()
     ticket = create_ticket(db, from_email=from_email, subject=subject, body=body, received_at=received_at)
     classify_ticket(db, ticket, llm, settings)
     propose_for_ticket(db, ticket, llm, settings)
     guard_ticket(db, ticket, settings)
     if ticket.status == "auto_approved":
         execute_ticket(db, ticket, settings, approved_by="auto")
-    return get_ticket(db, ticket.id)  # type: ignore[return-value]
+    done = get_ticket(db, ticket.id)
+    log_ticket_finished(done, latency_ms=int((time.monotonic() - started) * 1000))  # type: ignore[arg-type]
+    return done  # type: ignore[return-value]
+
+
+def log_ticket_finished(t: Ticket, *, latency_ms: int) -> None:
+    """One summary event per ticket: everything a dashboard needs (outcome, flags, calls, tokens, cost,
+    latency), and nothing the customer wrote. The email stays in the DB, out of the log stream."""
+    model_steps = [s for s in t.steps if s.kind != "tool"]
+    costs = [s.cost_usd for s in model_steps if s.cost_usd is not None]
+    log_event(
+        log, logging.INFO, "ticket_finished", ticket_id=t.id, status=t.status, decision=t.decision,
+        failure_reason=t.failure_reason, category=t.category, urgency=t.urgency,
+        action=(t.proposal or {}).get("action"), amount_cents=t.amount_cents,
+        flags=[f["code"] for f in t.flags or []], executed=any(a.status == "executed" for a in t.actions),
+        model_calls=len(model_steps), tool_calls=len(t.steps) - len(model_steps),
+        llm_errors=sum(1 for s in model_steps if s.error),
+        input_tokens=sum(s.input_tokens or 0 for s in model_steps),
+        output_tokens=sum(s.output_tokens or 0 for s in model_steps),
+        cost_usd=sum(costs, Decimal(0)) if len(costs) == sum(s.raw_output is not None for s in model_steps) else None,
+        models=sorted({s.model for s in model_steps if s.model}),
+        prompt_version=t.prompt_version, policy_version=t.policy_version, latency_ms=latency_ms,
+    )
 
 
 def get_ticket(db: Session, ticket_id: uuid.UUID) -> Ticket | None:
