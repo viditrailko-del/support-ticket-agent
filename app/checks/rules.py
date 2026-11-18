@@ -5,8 +5,8 @@ own `amount_cents` is only compared. Every threshold here is internal (rule 13):
 
 Day windows mirror the policy pages ("up to and including N days"):
   refund   delivered <= 30 days (VIP 60) | not shipped yet (cancellation) | lost (shipped >= 14 days, not delivered)
-  replace  delivered <= 14 days (damage) | <= 30 for a wrong item | <= 365 if every line is electronics
-           (warranty) | lost
+  replace  delivered <= 14 days (damage) | <= 30 for a wrong item | lost; <= 365 if every line is electronics
+           (warranty), but then always with a human (warranty_claim: "is it a defect" can't be checked)
 """
 
 from __future__ import annotations
@@ -84,6 +84,24 @@ def check_order(p: Proposal, f: Facts) -> list[Flag]:
     return []
 
 
+_ORDER_REF = re.compile(r"\bORD[\s\-_]*(\d+)\b", re.IGNORECASE)
+
+
+def order_ids_in(subject: str, body: str) -> set[str]:
+    """Order ids the customer wrote ("ORD-10466", "#ord 10466"), normalized like the tools do."""
+    return {f"ORD-{m.group(1)}" for m in _ORDER_REF.finditer(f"{subject}\n{body}")}
+
+
+def check_order_from_email(p: Proposal, f: Facts) -> list[Flag]:
+    """ACC-4: act only on an order number the customer gave. An agent that 'fixes' a mistyped or missing
+    number by picking an order from the account must not move money or goods on its own guess."""
+    if not _moves_goods(p) or f.order is None:
+        return []
+    if f.order.order_id in order_ids_in(f.subject, f.body):
+        return []
+    return [Flag("order_not_in_email", V, f"{f.order.order_id} is not an order number the customer wrote")]
+
+
 def check_items(p: Proposal, f: Facts) -> list[Flag]:
     """Every named line exists on the order, with no more units than were ordered."""
     if not _moves_goods(p) or f.order is None:
@@ -142,7 +160,10 @@ def check_window(p: Proposal, f: Facts) -> list[Flag]:
     if f.category == "wrong_item" and d <= WRONG_ITEM_WINDOW_DAYS:
         return []
     if lines and all(ln is not None and ln.category == "electronics" for ln in lines) and d <= WARRANTY_DAYS:
-        return []
+        # Inside the warranty, but only a manufacturing defect is covered (WAR-1/WAR-3), and whether "sounds
+        # tinny" or "stopped charging" is one is a judgement from the email that no check can verify.
+        return [Flag("warranty_claim", V, f"delivered {d} days ago: replacement rests on the warranty alone; "
+                     "a human confirms it is a manufacturing defect")]
     return [Flag("outside_replace_window", V, f"delivered {d} days ago; no damage, wrong-item or warranty "
                  "window covers this replacement")]
 
@@ -246,5 +267,5 @@ def check_auto_limit(p: Proposal, f: Facts, limits: Limits) -> list[Flag]:
     return []
 
 
-CHECKS = (check_order, check_items, check_amount, check_window, check_shipping, check_final_sale,
+CHECKS = (check_order, check_order_from_email, check_items, check_amount, check_window, check_shipping, check_final_sale,
           check_category, check_citations, check_injection)

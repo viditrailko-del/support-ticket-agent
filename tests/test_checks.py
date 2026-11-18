@@ -13,6 +13,7 @@ from app.checks.rules import (
     check_injection,
     check_items,
     check_order,
+    check_order_from_email,
     check_shipping,
     check_window,
 )
@@ -31,7 +32,7 @@ ORDER = OrderFacts(
     shipping_cents=599, total_paid_cents=2999 + 3000 + 999 + 599, refunded_cents=0,
 )
 FACTS = Facts(sender_customer_id="C1", sender_tier="standard", category="refund_request",
-              subject="Return", body="I'd like to return the bottle please.", order=ORDER, rules=RULES)
+              subject="Return ORD-1", body="I'd like to return the bottle please.", order=ORDER, rules=RULES)
 CITE = [{"rule_id": "REF-1", "quote": "up to and including 30 days after the delivery date"}]
 
 
@@ -84,6 +85,29 @@ def test_order_check_rejects(f, code):
 def test_order_check_ignores_replies_about_someone_elses_order():
     # ACC-2: replying "please write from your own address" is fine; nothing happens to the order.
     assert check_order(reply(order_id="ORD-1"), facts(order=order(customer_id="C2"))) == []
+
+
+# ---------------------------------------------------------------- order id from the email (ACC-4)
+
+@pytest.mark.parametrize("subject, body", [
+    ("Return ORD-1", ""), ("Return", "my order #ord 1 please"), ("Return", "order ord-1"), ("", "ORD_1"),
+])
+def test_order_named_in_the_email_passes(subject, body):
+    assert check_order_from_email(refund(), facts(subject=subject, body=body)) == []
+
+
+@pytest.mark.parametrize("subject, body", [
+    ("Return", "my e-reader please"),  # no number at all: the agent picked one from the account
+    ("Return ORD-11", "typo'd number"),  # a different number (ORD-11 is not ORD-1)
+    ("Return ORD-10", ""),
+])
+def test_order_the_customer_did_not_write_is_flagged(subject, body):
+    flags = check_order_from_email(refund(), facts(subject=subject, body=body))
+    assert codes(flags) == ["order_not_in_email"] and flags[0].severity is Severity.review
+
+
+def test_replies_may_mention_any_order():
+    assert check_order_from_email(reply(order_id="ORD-1"), facts(subject="", body="hi")) == []
 
 
 # ---------------------------------------------------------------- items
@@ -152,12 +176,22 @@ def test_in_transit_is_flagged():
     (15, "damaged_or_defective", 1, False),
     (30, "wrong_item", 1, True),
     (31, "wrong_item", 1, False),
-    (365, "damaged_or_defective", 2, True),  # electronics: warranty
-    (366, "damaged_or_defective", 2, False),
+    (14, "damaged_or_defective", 2, True),  # electronics inside the damage window: no warranty needed
 ])
 def test_replace_windows(days, category, line, ok):
     f = facts(category=category, order=order(days_since_delivered=days))
     assert (check_window(replace_(items=[{"line_no": line, "qty": 1}]), f) == []) is ok
+
+
+@pytest.mark.parametrize("days, line, code", [
+    (15, 2, "warranty_claim"), (365, 2, "warranty_claim"),  # electronics: warranty, so a human decides
+    (366, 2, "outside_replace_window"),
+    (20, 1, "outside_replace_window"),  # not electronics: no warranty
+])
+def test_warranty_replacement_always_needs_a_human(days, line, code):
+    f = facts(category="damaged_or_defective", order=order(days_since_delivered=days))
+    flags = check_window(replace_(items=[{"line_no": line, "qty": 1}]), f)
+    assert codes(flags) == [code] and flags[0].severity is Severity.review
 
 
 # ---------------------------------------------------------------- shipping, final sale
