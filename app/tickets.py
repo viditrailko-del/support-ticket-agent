@@ -16,6 +16,7 @@ import uuid
 from collections.abc import Callable
 from datetime import UTC, datetime
 from decimal import Decimal
+from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
@@ -74,10 +75,11 @@ def match_customer(db: Session, from_email: str) -> str | None:
 
 
 def create_ticket(
-    db: Session, *, from_email: str, subject: str, body: str, received_at: datetime | None = None
+    db: Session, *, from_email: str, subject: str, body: str, received_at: datetime | None = None,
+    attachments: list[dict[str, Any]] | None = None,
 ) -> Ticket:
     ticket = Ticket(
-        from_email=from_email, subject=subject, body=body,
+        from_email=from_email, subject=subject, body=body, attachments=attachments or [],
         received_at=received_at or datetime.now(UTC),
         customer_id=match_customer(db, from_email),
         status="received",
@@ -138,11 +140,12 @@ def propose_for_ticket(
 
 def receive_ticket(
     db: Session, *, from_email: str, subject: str, body: str, received_at: datetime | None,
-    llm: LLMClient, settings: Settings,
+    llm: LLMClient, settings: Settings, attachments: list[dict[str, Any]] | None = None,
 ) -> Ticket:
     """POST /tickets: store, classify, run the agent, run the checks, and execute only if auto-approved."""
     started = time.monotonic()
-    ticket = create_ticket(db, from_email=from_email, subject=subject, body=body, received_at=received_at)
+    ticket = create_ticket(db, from_email=from_email, subject=subject, body=body, received_at=received_at,
+                           attachments=attachments)
     classify_ticket(db, ticket, llm, settings)
     propose_for_ticket(db, ticket, llm, settings)
     guard_ticket(db, ticket, settings)

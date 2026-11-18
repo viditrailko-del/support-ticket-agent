@@ -48,7 +48,8 @@ def test_sender_match_ignores_case(client):
 
 def test_unknown_sender_is_stored_without_customer(client):
     t = post(client, from_email="pat.unknown@example.net").json()
-    assert t["customer_id"] is None and t["status"] == "executed"
+    assert t["customer_id"] is None and t["status"] == "needs_human"  # no automatic reply to a stranger
+    assert [f["code"] for f in t["flags"]] == ["reply_to_non_customer"] and t["actions"] == []
 
 
 def test_customer_is_matched_from_the_sender_only(client):
@@ -91,3 +92,31 @@ def test_reseeding_keeps_existing_tickets_valid(client, db):
     seed(db)  # upsert: same ids, tickets' customer FK still valid
     assert client.get(f"/tickets/{t['id']}").json()["customer_id"] == "C0029"
     assert db.scalar(select(func.count()).select_from(Customer)) == 200
+
+
+# ---------------------------------------------------------------- odd emails
+
+@pytest.mark.parametrize("body", ["", "   ", "\n\t \n"])
+def test_empty_or_blank_body_is_422_and_costs_nothing(client, fake_llm, body):
+    r = post(client, body=body)
+    assert r.status_code == 422 and fake_llm.calls == [] and fake_llm.chat_calls == []
+
+
+def test_unknown_fields_are_an_error_not_silently_dropped(client, fake_llm):
+    assert post(client, cc="boss@example.com").status_code == 422
+    # file contents are never accepted: only metadata
+    att = {"filename": "crack.jpg", "data": "iVBORw0KGgo..."}
+    assert post(client, attachments=[att]).status_code == 422
+    assert fake_llm.calls == []
+
+
+def test_attachments_are_stored_and_send_the_ticket_to_a_human(client):
+    att = [{"filename": "crack.jpg", "content_type": "image/jpeg", "size_bytes": 182000},
+           {"filename": "receipt.pdf"}]
+    r = post(client, body="The lamp arrived cracked, see the photo.", attachments=att)
+    assert r.status_code == 201
+    t = r.json()
+    assert t["attachments"] == [att[0], {"filename": "receipt.pdf", "content_type": "application/octet-stream",
+                                         "size_bytes": None}]
+    assert t["status"] == "needs_human" and "has_attachments" in [f["code"] for f in t["flags"]]
+    assert t["actions"] == [] and client.get(f"/tickets/{t['id']}").json()["attachments"] == t["attachments"]

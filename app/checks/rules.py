@@ -256,6 +256,53 @@ def check_injection(p: Proposal, f: Facts) -> list[Flag]:
     return [Flag("injection_signal", V, f"email contains instruction-like text: {', '.join(signals)}")]
 
 
+def check_attachments(p: Proposal, f: Facts) -> list[Flag]:
+    """The customer sent files the agent can't see (a damage photo, a receipt): whatever it proposed, it
+    decided without them, so a human looks at the files first."""
+    if not f.attachments:
+        return []
+    return [Flag("has_attachments", V, f"{len(f.attachments)} attachment(s) the agent could not see: "
+                 f"{', '.join(f.attachments[:5])}")]
+
+
+def check_sender_is_customer(p: Proposal, f: Facts) -> list[Flag]:
+    """Never answer a stranger automatically. The From address of an email can be forged, and an auto-reply to
+    spam confirms the inbox is watched (backscatter). Refunds/replacements to non-customers are already
+    rejected by check_order; this covers replies and escalations."""
+    if f.sender_customer_id is not None or p.action in (ActionType.refund, ActionType.replace):
+        return []
+    return [Flag("reply_to_non_customer", V, "the sender is not a customer: a human decides whether to answer")]
+
+
+# A reply that commits the shop to something only a refund / replacement action delivers. Matched per sentence.
+_PROMISE = re.compile(
+    r"\brefund (has been|was|is being|will be) (issued|processed|approved|sent)"
+    r"|\bwe (will|'ll|have|are going to) (issue|process|send|refund)"
+    r"|\b(return|refund|request) (is|has been) approved"
+    r"|\b(sending|send|ship|shipping) (you )?(a |the |your )?(free )?replacement"
+    r"|\breplacement (is|has been|will be) (on its way|sent|shipped|dispatched)"
+    r"|\bprepaid return label",
+    re.IGNORECASE,
+)
+_SENTENCE = re.compile(r"(?<=[.!?])\s+|\n+")
+
+
+def promises_in(reply: str) -> list[str]:
+    text = reply.replace("\\n", "\n")  # models sometimes write a literal backslash-n
+    return [s.strip() for s in _SENTENCE.split(text) if _PROMISE.search(s)]
+
+
+def check_reply_promises(p: Proposal, f: Facts) -> list[Flag]:
+    """A reply_only / escalate must not promise what only a refund or replacement does: the reply is sent as
+    the action, and the promised money or goods never follow (eval: t10 said "we will issue your refund")."""
+    if _moves_goods(p):
+        return []
+    found = promises_in(p.reply_draft)
+    if not found:
+        return []
+    return [Flag("reply_promises_action", V, f"{p.action.value} reply promises: {found[0][:120]!r}")]
+
+
 def check_auto_limit(p: Proposal, f: Facts, limits: Limits) -> list[Flag]:
     """Money and goods at or above the internal limit always go to a human."""
     if not _moves_goods(p) or f.order is None:
@@ -268,4 +315,5 @@ def check_auto_limit(p: Proposal, f: Facts, limits: Limits) -> list[Flag]:
 
 
 CHECKS = (check_order, check_order_from_email, check_items, check_amount, check_window, check_shipping, check_final_sale,
-          check_category, check_citations, check_injection)
+          check_category, check_citations, check_injection, check_attachments, check_sender_is_customer,
+          check_reply_promises)

@@ -123,6 +123,8 @@ class Ticket(Base):
     from_email: Mapped[str] = mapped_column(String(320))
     subject: Mapped[str] = mapped_column(Text)
     body: Mapped[str] = mapped_column(Text)
+    # Attachment metadata as received (filename, content_type, size_bytes). Never the contents.
+    attachments: Mapped[list[dict[str, Any]]] = mapped_column(JsonType, default=list, server_default=text("'[]'"))
     received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))  # "today" for every date check
     # Matched from the sender address only (rule 1), never from the body or the model. None = not a customer.
     customer_id: Mapped[str | None] = mapped_column(ForeignKey("customers.id"), index=True)

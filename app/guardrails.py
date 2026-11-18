@@ -51,7 +51,8 @@ def build_facts(db: Session, ticket: Ticket, proposal: Proposal, *, lock_order: 
     )
     rules = {r.id: r.text for r in load_policies(db).rules}
     return Facts(sender_customer_id=ticket.customer_id, sender_tier=customer.tier if customer else None,
-                 category=ticket.category, subject=ticket.subject, body=ticket.body, order=order, rules=rules)
+                 category=ticket.category, subject=ticket.subject, body=ticket.body, order=order, rules=rules,
+                 attachments=tuple(a.get("filename", "?") for a in ticket.attachments or []))
 
 
 def check_proposal(db: Session, ticket: Ticket, proposal: Proposal, settings: Settings,

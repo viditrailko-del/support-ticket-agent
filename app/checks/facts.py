@@ -67,3 +67,4 @@ class Facts:
     body: str
     order: OrderFacts | None  # None: the proposal names no order, or the order does not exist
     rules: dict[str, str] = field(default_factory=dict)  # rule_id -> rule text (what the prompt contained)
+    attachments: tuple[str, ...] = ()  # filenames the email carried (the agent never sees their contents)

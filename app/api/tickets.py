@@ -25,7 +25,8 @@ def post_ticket(
     """Store a customer email as received (sender matched to a customer by address only), then classify
     it. An LLM outage gives status `failed` (HTTP 201), never a 500."""
     t = receive_ticket(db, from_email=str(body.from_email), subject=body.subject, body=body.body,
-                       received_at=body.received_at, llm=llm, settings=settings)
+                       received_at=body.received_at, llm=llm, settings=settings,
+                       attachments=[a.model_dump() for a in body.attachments])
     return TicketOut.from_ticket(t)
 
 

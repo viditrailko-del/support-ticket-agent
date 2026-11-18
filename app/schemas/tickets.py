@@ -11,15 +11,38 @@ from app.db.models import Action, AgentStep, Review, Ticket
 from app.schemas.proposal import ActionType, Citation, ProposedItem
 
 
+class AttachmentIn(BaseModel):
+    """What the email said it carried. Only metadata: the agent can't read files, so their contents are never
+    accepted, and a ticket with any attachment always goes to a human (the evidence may be in the file)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    filename: str = Field(min_length=1, max_length=255)
+    content_type: str = Field(default="application/octet-stream", max_length=100)
+    size_bytes: int | None = Field(default=None, ge=0)
+
+
 class TicketIn(BaseModel):
+    # Unknown fields are an error, not silently dropped: a caller must not believe something reached us.
+    model_config = ConfigDict(extra="forbid")
+
     from_email: EmailStr = Field(description="Sender address. The customer is matched from this, nothing else.")
     subject: str = Field(max_length=500)
-    body: str = Field(min_length=1, max_length=20_000)
+    body: str = Field(min_length=1, max_length=20_000, description="Must contain some text (not only whitespace)")
+    attachments: list[AttachmentIn] = Field(default=[], max_length=50)
     received_at: datetime | None = Field(
         default=None,
         description="When the email arrived (default: now). Set it to replay labeled eval tickets, which are "
         "all received on the shop's fixed date.",
     )
+
+    @field_validator("body")
+    @classmethod
+    def _not_blank(cls, v: str) -> str:
+        # Checked, not stripped: the body is stored exactly as received (rule 4).
+        if not v.strip():
+            raise ValueError("body is empty (only whitespace)")
+        return v
 
     @field_validator("received_at")
     @classmethod
@@ -113,6 +136,7 @@ class TicketOut(BaseModel):
     from_email: str
     subject: str
     body: str
+    attachments: list[dict[str, Any]]
     received_at: datetime
     customer_id: str | None  # None: the sender is not a customer
     category: str | None
@@ -132,6 +156,7 @@ class TicketOut(BaseModel):
     def from_ticket(cls, t: Ticket) -> "TicketOut":
         return cls(
             id=t.id, status=t.status, failure_reason=t.failure_reason, from_email=t.from_email, subject=t.subject, body=t.body,
+            attachments=t.attachments or [],
             received_at=t.received_at, customer_id=t.customer_id, category=t.category, urgency=t.urgency,
             prompt_version=t.prompt_version, policy_version=t.policy_version,
             steps=[StepOut.from_row(s) for s in t.steps], proposal=t.proposal, flags=t.flags or [],
