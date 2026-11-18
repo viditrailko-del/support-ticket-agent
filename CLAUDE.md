@@ -247,7 +247,8 @@ Structured JSON logging, prod Docker image, CI, README with real eval numbers an
   calls, tokens, cost, latency, prompt/policy version; never the sender, subject or body: tested). Prod image runs
   uvicorn directly with `app/uvicorn_log.json`, so every line is JSON from the first (`fastapi run` printed a text
   banner first). `.github/workflows/tests.yml` (COMPOSE_PROJECT_NAME=support): shop snapshot check, tests,
-  migrations + `alembic check`, prod build, prod /health + JSON-only logs. Not run on GitHub yet (no remote).
+  migrations + `alembic check`, prod build, prod /health + JSON-only logs. Green on GitHub since the first push
+  (2026-11-18, repo viditrailko-del/support-ticket-agent, public).
   README: design, eval table (no guardrails / v1 / each fix), findings -> fixes.
 
 ### Phase 7: fixes driven by the eval
@@ -291,7 +292,7 @@ Build in phase order. No auth, queues, frontend, real email or real payments unt
 | 3 | Agent loop (function calling, stored steps) | done (smoke: 4/4 action + amount on flash-lite) |
 | 4 | Guardrails + approval policy | done (pure checks, review endpoints, idempotent execution; labels pass the checks) |
 | 5 | Eval harness (unsafe auto-actions headline) | done (flash-lite: 1 unsafe auto-action vs 2 without guardrails, 61/63 correct) |
-| 6 | Hardening: logging, Docker prod, README numbers, CI | done (CI written, not yet run: no GitHub remote) |
+| 6 | Hardening: logging, Docker prod, README numbers, CI | done (CI green on GitHub) |
 | 7 | Fixes driven by the eval | started (2 fixes: unsafe auto-actions 1 -> 0 on the frozen run) |
 
 Update the Status column when a phase is done.

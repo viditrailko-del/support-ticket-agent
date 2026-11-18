@@ -1,5 +1,7 @@
 # Support Ticket Agent
 
+[![tests](https://github.com/viditrailko-del/support-ticket-agent/actions/workflows/tests.yml/badge.svg)](https://github.com/viditrailko-del/support-ticket-agent/actions/workflows/tests.yml)
+
 A backend service that handles customer support emails with an LLM agent (Gemini): it looks up the
 customer's order with tools, then proposes an action (refund, replacement, reply or escalation) with a
 reply draft and policy citations. It is built so that **a wrong proposal can't execute on its own**: the
