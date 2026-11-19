@@ -124,6 +124,16 @@ def test_post_tickets_spends_the_same_quota_in_demo_mode(client, fake_llm):
     assert client.post("/demo/live", json=EMAIL).status_code == 429
 
 
+def test_post_tickets_refuses_scenario_customers_in_demo_mode(demo, fake_llm):
+    e = scenarios()["simple_refund"].email
+    body = {"from_email": e["from_email"].upper(), "subject": e["subject"], "body": e["body"]}
+    r = demo.post("/tickets", json=body)
+    assert r.status_code == 409 and "/demo/replay" in r.json()["detail"]
+    assert fake_llm.calls == []
+    assert demo.get("/demo/status").json()["live_used_today"] == 0
+    assert demo.post("/demo/replay/simple_refund").json()["status"] == "executed"
+
+
 def test_post_tickets_is_not_capped_outside_demo_mode(client):
     app.dependency_overrides[get_settings] = lambda: test_settings(demo_live_daily_limit=0)
     body = {"from_email": "farid.quigley@example.com", "subject": "s", "body": "Return ORD-10436 please."}

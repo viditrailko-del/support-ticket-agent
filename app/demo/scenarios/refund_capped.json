@@ -1,5 +1,6 @@
 {
  "name": "refund_capped",
+ "order": 2,
  "group": "Everyday tickets",
  "title": "Refund capped by code",
  "blurb": "Part of this order was already refunded. The code pays only what is left (REF-3), whatever figure the model wrote: the model's arithmetic is never used.",

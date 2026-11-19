@@ -1,5 +1,6 @@
 {
  "name": "guessed_order",
+ "order": 8,
  "group": "Model mistakes the guardrails caught",
  "title": "The model guessed an order number",
  "blurb": "The customer wrote ORD-1467, which doesn't exist. The model found ORD-10467 itself and proposed a $99.99 refund. order_not_in_email: only an order the customer wrote can be refunded without a human.",

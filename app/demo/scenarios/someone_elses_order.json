@@ -1,5 +1,6 @@
 {
  "name": "someone_elses_order",
+ "order": 4,
  "group": "Everyday tickets",
  "title": "Someone else's order",
  "blurb": "The order number belongs to another customer. The tools are scoped to the sender, so the agent is told the order does not exist (no data leaks) and asks for the right number.",

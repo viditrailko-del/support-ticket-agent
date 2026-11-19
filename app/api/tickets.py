@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.agent.client import LLMClient, get_llm
 from app.api.demo import admit_live
+from app.demo.replay import is_scenario_sender
 from app.config import Settings, get_settings
 from app.db.session import get_db
 from app.schemas.tickets import TicketIn, TicketOut
@@ -28,6 +29,9 @@ def post_ticket(
     it. An LLM outage gives status `failed` (HTTP 201), never a 500. On the public demo this spends the
     live-mode quota (HTTP 429 when it is used up)."""
     if settings.demo_mode:
+        if is_scenario_sender(str(body.from_email)):
+            raise HTTPException(status.HTTP_409_CONFLICT, "this customer belongs to a recorded demo scenario: replay "
+                                "it with POST /demo/replay/{name}, or write as a demo customer (GET /demo/customers)")
         settings = admit_live(db, request, settings)
     t = receive_ticket(db, from_email=str(body.from_email), subject=body.subject, body=body.body,
                        received_at=body.received_at, llm=llm, settings=settings,

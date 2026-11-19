@@ -1,5 +1,6 @@
 {
  "name": "needs_approval",
+ "order": 3,
  "group": "Everyday tickets",
  "title": "Too big to run alone",
  "blurb": "A correct refund of $94.99, but at or above the auto-approval limit: it waits for a human. Approve it and watch it execute (once: execution is idempotent).",

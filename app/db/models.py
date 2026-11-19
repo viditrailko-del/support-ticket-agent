@@ -45,7 +45,9 @@ class Customer(Base):
     tier: Mapped[str] = mapped_column(String(20))  # standard | vip
     created_at: Mapped[date] = mapped_column(Date)
 
-    orders: Mapped[list["Order"]] = relationship(back_populates="customer", order_by="Order.placed_at")
+    # id breaks ties: orders placed the same day came back in whatever order Postgres liked, so get_customer's
+    # result differed between databases (found by the demo's replay check, 2026-11-19).
+    orders: Mapped[list["Order"]] = relationship(back_populates="customer", order_by="(Order.placed_at, Order.id)")
 
 
 class Order(Base):

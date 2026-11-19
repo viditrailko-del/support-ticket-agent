@@ -1,5 +1,6 @@
 {
  "name": "promised_refund",
+ "order": 7,
  "group": "Model mistakes the guardrails caught",
  "title": "A reply that promises a refund",
  "blurb": "The model chose \"reply only\" but its reply says the refund is approved: a promise nothing would keep. The reply_promises_action check holds it for a human.",

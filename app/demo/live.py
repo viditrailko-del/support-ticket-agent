@@ -128,5 +128,5 @@ def _customer(c: Customer, today: date) -> dict[str, Any]:
                        "final_sale": i.final_sale} for i in o.items],
             "shipping_cents": o.shipping_cents, "total_paid_cents": o.total_paid_cents,
             "refunded_cents": sum(r.amount_cents for r in o.refunds),
-        } for o in sorted(c.orders, key=lambda o: o.placed_at, reverse=True)],
+        } for o in sorted(c.orders, key=lambda o: (o.placed_at, o.id), reverse=True)],
     }

@@ -32,6 +32,14 @@ def test_get_customer_returns_the_sender_and_their_orders(db):
     assert placed == sorted(placed)  # oldest first
 
 
+def test_get_customer_order_list_is_deterministic(db):
+    # Olga has two orders placed the same day (ORD-10304, ORD-10308): the order id decides, on every database.
+    r = run_tool(ctx(db, OLGA_KOWAL), "get_customer", {})
+    keys = [(o["placed_at"], o["order_id"]) for o in r["orders"]]
+    assert keys == sorted(keys)
+    assert [o["order_id"] for o in r["orders"] if o["placed_at"] == "2026-08-29"] == ["ORD-10304", "ORD-10308"]
+
+
 def test_get_customer_for_unknown_sender(db):
     r = run_tool(ctx(db, None), "get_customer", {})
     assert r["found"] is False and r["reason"] == NOT_A_CUSTOMER

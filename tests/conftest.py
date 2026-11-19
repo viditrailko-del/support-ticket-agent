@@ -83,7 +83,8 @@ class FakeLLM:
 
 
 def test_settings(**overrides) -> Settings:
-    base = dict(database_url=TEST_DB_URL, gemini_api_key="fake", llm_retry_backoff_s=0,
+    # demo_mode pinned off: a DEMO_MODE=true in .env must not change what the tests see.
+    base = dict(database_url=TEST_DB_URL, gemini_api_key="fake", llm_retry_backoff_s=0, demo_mode=False,
                 classify_model="gemini-3.5-flash-lite", classify_fallback_model="gemini-3.5-flash")
     return Settings(**{**base, **overrides})
 

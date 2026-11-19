@@ -57,11 +57,15 @@ class Scenario:
 
 @lru_cache
 def scenarios() -> dict[str, Scenario]:
-    out = {}
-    for path in sorted(SCENARIOS_DIR.glob("*.json")):
-        data = json.loads(path.read_text(encoding="utf-8"))
-        out[data["name"]] = Scenario(name=data["name"], data=data)
-    return out
+    """name -> scenario, in the order the demo page lists them (the builder's `order`)."""
+    loaded = [json.loads(p.read_text(encoding="utf-8")) for p in SCENARIOS_DIR.glob("*.json")]
+    return {d["name"]: Scenario(name=d["name"], data=d) for d in sorted(loaded, key=lambda d: d["order"])}
+
+
+def is_scenario_sender(email: str) -> bool:
+    """On the public demo, live tickets from a scenario's customer could refund the very order a recording
+    looked at and make it diverge until the nightly reset, so POST /tickets refuses them there."""
+    return email.strip().lower() in {s.email["from_email"].lower() for s in scenarios().values()}
 
 
 def _canon(value: Any) -> str:
@@ -130,7 +134,13 @@ def replay_settings(settings: Settings, recorded: dict[str, Any]) -> Settings:
 
 # One replay of a scenario at a time (the demo runs as one process): a replay deletes the scenario's earlier
 # replays, which must not happen under a replay that is still running.
-_locks: dict[str, threading.Lock] = {name: threading.Lock() for name in scenarios()}
+_locks: dict[str, threading.Lock] = {}
+_locks_guard = threading.Lock()
+
+
+def _lock(name: str) -> threading.Lock:
+    with _locks_guard:
+        return _locks.setdefault(name, threading.Lock())
 
 
 def clear_earlier_replays(db: Session, scenario: Scenario) -> int:
@@ -153,7 +163,7 @@ def refund_id(ticket_id: uuid.UUID) -> str:
 
 def replay(db: Session, scenario: Scenario, settings: Settings) -> Ticket:
     rec = scenario.data["recorded"]
-    with _locks.setdefault(scenario.name, threading.Lock()):
+    with _lock(scenario.name):
         clear_earlier_replays(db, scenario)
         e = scenario.email
         return receive_ticket(

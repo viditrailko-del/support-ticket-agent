@@ -1,5 +1,6 @@
 {
  "name": "simple_refund",
+ "order": 1,
  "group": "Everyday tickets",
  "title": "A simple refund",
  "blurb": "Return within 30 days, under the auto-approval limit, no flags: the refund runs with no human. The code pays $29.99, not the $35.98 total, because shipping is not refundable.",

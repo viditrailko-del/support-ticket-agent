@@ -302,6 +302,17 @@ Render (prod Dockerfile) + Neon Postgres -> tests -> README link + screenshots. 
   restart doesn't reset it. POST /tickets spends the same quota while DEMO_MODE is on. 429 when used up.
   Smoke 2026-11-19 (flash-lite): C0006 "e-reader ORD-10329, 63 days" -> reply_only citing REF-1, auto, 3 model
   calls, ~6s.
+- Built (page): `app/static/demo.html`, served at `/` in demo mode (elsewhere `/` redirects to `/docs`). One
+  self-contained file, vanilla JS, light/dark, phone width. Two tabs (recorded tickets / write your own with a
+  customer picker, their orders and example emails incl. an injection), then the full trace: email, agent steps
+  (model turns + tool calls, raw output on demand), proposal (model's amount vs code's), flags in plain English,
+  outcome with Approve/Reject for `needs_human`. Every API string is set with textContent (tested: no
+  innerHTML). Preview: Browser pane config `demo` (port 8003, DEMO_MODE=true on the dev DB).
+- In demo mode POST /tickets refuses a replay scenario's customer (409): a live ticket on their order would make
+  the replay diverge until the nightly reset.
+- **Finding (fixed):** get_customer listed orders by `placed_at` only, so two orders placed the same day came
+  back in an arbitrary order and the same tool call could answer differently on another database. The replay
+  divergence check caught it (Olga, t42). `Customer.orders` now sorts by (placed_at, id); tested.
 - Deploy note: behind Render's proxy, uvicorn needs `--forwarded-allow-ips='*'` (or the proxy's range) or
   every visitor has the proxy's IP and the per-IP cap becomes one shared cap.
 
@@ -319,7 +330,7 @@ Build in phase order. No auth, queues, frontend, real email or real payments unt
 | 5 | Eval harness (unsafe auto-actions headline) | done (flash-lite: 1 unsafe auto-action vs 2 without guardrails, 61/63 correct) |
 | 6 | Hardening: logging, Docker prod, README numbers, CI | done (CI green on GitHub) |
 | 7 | Fixes driven by the eval | started (2 fixes: unsafe auto-actions 1 -> 0 on the frozen run) |
-| 8 | Public live demo | started (replay mode: 9 scenarios, no Gemini calls; live mode: 7 customers, capped) |
+| 8 | Public live demo | started (replay, capped live mode, demo page at `/`; next: reset + deploy) |
 
 Update the Status column when a phase is done.
 

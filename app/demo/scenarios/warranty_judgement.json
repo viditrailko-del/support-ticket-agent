@@ -1,5 +1,6 @@
 {
  "name": "warranty_judgement",
+ "order": 9,
  "group": "Model mistakes the guardrails caught",
  "title": "\"It sounds tinny\"",
  "blurb": "One day past the return window, the model offered a warranty replacement. Whether \"tinny\" is a defect can't be checked in code, so every warranty-only replacement goes to a human.",

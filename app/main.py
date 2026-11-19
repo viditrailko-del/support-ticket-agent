@@ -1,13 +1,16 @@
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
+from typing import Annotated
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
+from fastapi.responses import FileResponse, RedirectResponse
 
 from app.api.demo import router as demo_router
 from app.api.reviews import router as reviews_router
 from app.api.tickets import router as tickets_router
-from app.config import get_settings
+from app.config import Settings, get_settings
 from app.logging_setup import adopt_uvicorn_loggers, configure_logging, log_event
 
 configure_logging(get_settings().log_format, get_settings().log_level)
@@ -33,6 +36,17 @@ app = FastAPI(
 app.include_router(tickets_router)
 app.include_router(reviews_router)
 app.include_router(demo_router)  # 404 unless DEMO_MODE
+
+
+DEMO_PAGE = Path(__file__).parent / "static" / "demo.html"
+
+
+@app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False, response_model=None)
+def home(settings: Annotated[Settings, Depends(get_settings)]) -> FileResponse | RedirectResponse:
+    """The demo page on the public demo; elsewhere the API docs."""
+    if settings.demo_mode:
+        return FileResponse(DEMO_PAGE, media_type="text/html")
+    return RedirectResponse("/docs")
 
 
 @app.get("/health", tags=["meta"])

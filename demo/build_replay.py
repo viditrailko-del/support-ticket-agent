@@ -64,7 +64,7 @@ def build() -> list[Path]:
     runs: dict[str, dict] = {}
     SCENARIOS_DIR.mkdir(exist_ok=True)
     written = []
-    for name, tid, run_id, group, title, blurb in SCENARIOS:
+    for order, (name, tid, run_id, group, title, blurb) in enumerate(SCENARIOS, start=1):
         run = runs.setdefault(run_id, json.loads((RESULTS / f"{run_id}.json").read_text(encoding="utf-8")))
         item = next(i for i in run["items"] if i["id"] == tid)
         t = tickets[tid]
@@ -76,7 +76,7 @@ def build() -> list[Path]:
         classified = [a for a in item["classify_attempts"] if a["raw_output"] is not None]
         keep = ("raw_output", "latency_ms", "input_tokens", "output_tokens", "thinking_tokens")
         data = {
-            "name": name, "group": group, "title": title, "blurb": blurb, "label_id": tid,
+            "name": name, "order": order, "group": group, "title": title, "blurb": blurb, "label_id": tid,
             "source_run": run_id,
             "email": {"from_email": t["from"], "subject": t["subject"], "body": t["body"],
                       "received_at": f"{t['received_at']}T10:00:00+00:00", "attachments": t.get("attachments", [])},

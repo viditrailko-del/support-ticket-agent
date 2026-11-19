@@ -78,9 +78,12 @@ def test_replaying_again_replaces_the_earlier_replay_and_its_refund(demo, db):
     assert db.scalar(select(func.count()).select_from(Refund).where(Refund.id.like("RF-T%"))) == 1
 
 
-def test_a_live_ticket_with_the_same_email_is_not_cleared(demo, db):
+def test_a_live_ticket_with_the_same_email_is_not_cleared(client, db):
     e = scenarios()["needs_approval"].email
-    live = demo.post("/tickets", json={k: e[k] for k in ("from_email", "subject", "body", "received_at")}).json()
+    # sent outside demo mode (the dev API): the public demo refuses scenario senders on POST /tickets
+    live = client.post("/tickets", json={k: e[k] for k in ("from_email", "subject", "body", "received_at")}).json()
+    app.dependency_overrides[get_settings] = lambda: test_settings(demo_mode=True)
+    demo = client
     demo.post("/demo/replay/needs_approval")
     demo.post("/demo/replay/needs_approval")
     assert db.get(Ticket, live["id"]) is not None
