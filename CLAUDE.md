@@ -313,8 +313,15 @@ Render (prod Dockerfile) + Neon Postgres -> tests -> README link + screenshots. 
 - **Finding (fixed):** get_customer listed orders by `placed_at` only, so two orders placed the same day came
   back in an arbitrary order and the same tool call could answer differently on another database. The replay
   divergence check caught it (Olga, t42). `Customer.orders` now sorts by (placed_at, id); tested.
-- Deploy note: behind Render's proxy, uvicorn needs `--forwarded-allow-ips='*'` (or the proxy's range) or
-  every visitor has the proxy's IP and the per-IP cap becomes one shared cap.
+- Built (reset + deploy): `app/demo/reset.py` (shared by `python -m demo.reset` and `POST /demo/reset`, which
+  needs `X-Reset-Token` = `DEMO_RESET_TOKEN`; empty token = route off), nightly `.github/workflows/demo-reset.yml`
+  (00:05 UTC; repo variable DEMO_URL + secret DEMO_RESET_TOKEN; skipped without DEMO_URL). `render.yaml` (free
+  Docker web service, prod stage, `sh docker/demo-start.sh` = migrations + seed + uvicorn on $PORT with
+  `--forwarded-allow-ips '*'`); prod image now includes `data/` for the seed. `DATABASE_URL` accepts
+  `postgres://`/`postgresql://` (Neon) and switches to psycopg. CI boots the prod image with the start script on
+  a fresh DB and replays every scenario. Rehearsed locally 2026-11-19: fresh DB -> 9/9 scenarios, reset, restart.
+  Account steps (Gemini key in its own project, Neon, Render, GitHub secret): `demo/DEPLOY.md`.
+- The per-IP cap trusts X-Forwarded-For (spoofable); the daily cap is what protects the quota.
 
 ## Scope discipline
 
@@ -330,7 +337,7 @@ Build in phase order. No auth, queues, frontend, real email or real payments unt
 | 5 | Eval harness (unsafe auto-actions headline) | done (flash-lite: 1 unsafe auto-action vs 2 without guardrails, 61/63 correct) |
 | 6 | Hardening: logging, Docker prod, README numbers, CI | done (CI green on GitHub) |
 | 7 | Fixes driven by the eval | started (2 fixes: unsafe auto-actions 1 -> 0 on the frozen run) |
-| 8 | Public live demo | started (replay, capped live mode, demo page at `/`; next: reset + deploy) |
+| 8 | Public live demo | started (replay, live mode, page, reset, Render blueprint; next: deploy on your accounts, README) |
 
 Update the Status column when a phase is done.
 

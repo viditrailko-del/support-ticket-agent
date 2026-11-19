@@ -1,6 +1,7 @@
 from datetime import date
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -51,6 +52,18 @@ class Settings(BaseSettings):
     # The fake shop's "today" (data/shop.json shop_today): live tickets are received on it so every window
     # and day count matches the seeded data.
     shop_today: date = date(2026, 11, 15)
+    # POST /demo/reset needs this in the X-Reset-Token header. Empty = the route is off (404).
+    demo_reset_token: str = ""
+
+    @field_validator("database_url")
+    @classmethod
+    def _psycopg_driver(cls, v: str) -> str:
+        # Hosted Postgres (Neon, Render) hands out postgres:// or postgresql:// URLs; SQLAlchemy would pick
+        # psycopg2, which isn't installed. Same database, our driver.
+        for prefix in ("postgres://", "postgresql://"):
+            if v.startswith(prefix):
+                return "postgresql+psycopg://" + v[len(prefix):]
+        return v
 
 
 @lru_cache

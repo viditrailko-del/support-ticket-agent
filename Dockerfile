@@ -37,10 +37,13 @@ RUN useradd --create-home --uid 10001 app
 WORKDIR /app
 # Same base image as prod-deps, so the venv's python symlinks stay valid.
 COPY --from=prod-deps /opt/venv /opt/venv
-# Only what runs: the app (prompts included) and migrations. No tests, eval, data generator.
+# Only what runs: the app (prompts and demo page included), migrations, and the shop + policies the demo
+# seeds on boot (data/ is stdlib-only). No tests, eval.
 COPY app ./app
 COPY alembic ./alembic
 COPY alembic.ini ./
+COPY data ./data
+COPY docker/demo-start.sh ./docker/demo-start.sh
 USER app
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
