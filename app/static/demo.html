@@ -202,7 +202,7 @@ footer { color: var(--muted); font-size: 13px; padding: 0 0 32px; }
   <div class="grid">
     <div class="panel input-panel">
       <div class="tabs" role="tablist">
-        <button role="tab" id="tab-rec" aria-selected="true" aria-controls="pane-rec">Recorded tickets<small>instant, no AI call</small></button>
+        <button role="tab" id="tab-rec" aria-selected="true" aria-controls="pane-rec">Recorded tickets<small>no AI call · a few seconds</small></button>
         <button role="tab" id="tab-live" aria-selected="false" aria-controls="pane-live">Write your own<small>real Gemini</small></button>
       </div>
       <div class="pad" id="pane-rec" role="tabpanel" aria-labelledby="tab-rec">
@@ -302,6 +302,15 @@ const FLAG = {
   reply_promises_action: "The reply promises something that won't happen",
   above_auto_limit: "Above the auto-approval limit",
 };
+// Why a ticket stopped, for a visitor. Each one is the system working as designed: no crash, nothing executed.
+const FAILED = {
+  llm_unavailable: "Gemini is overloaded or unreachable right now (it retried, then gave up). Try a recorded ticket, or try again in a few minutes.",
+  classification_failed: "Gemini couldn't classify the email right now (usually a busy model). Try a recorded ticket, or try again in a few minutes.",
+  timeout: "The agent ran past its time limit (usually a slow, busy model), so it was stopped. Try again in a few minutes.",
+  step_limit: "The agent used up its 6 steps without a final answer, so it was stopped instead of looping.",
+  invalid_proposal: "The model's answer broke the required format twice, so it was rejected instead of guessed at.",
+  diverged: "This recording no longer matches the shop data (the order changed since it was recorded), so it wasn't replayed. The demo resets every night.",
+};
 const SEV = { reject: ["blocks", "b-bad"], review: ["needs a human", "b-warn"], info: ["note", "b-info"] };
 
 // ------------------------------------------------------------------ input panel
@@ -383,7 +392,7 @@ $("#live-form").addEventListener("submit", async (e) => {
   const body = { customer_id: $("#customer").value, subject: $("#subject").value, body: $("#body").value };
   const c = currentCustomer();
   const ok = await run(() => api("/demo/live", { method: "POST", body: JSON.stringify(body) }), null,
-                       "The agent is working on it. This usually takes 5 to 20 seconds…",
+                       "The agent is working on it. Usually 10 to 30 seconds; up to a minute when Gemini is busy…",
                        (msg) => { $("#live-err").textContent = msg; $("#live-err").hidden = false; });
   if (ok) { refreshQuota(); refreshCustomers(c && c.customer_id); }
 });
@@ -426,7 +435,11 @@ function verdict(t) {
   const p = t.proposal || {};
   const what = p.action === "refund" ? `Refund of ${usd(t.amount_cents)}` : ACTION[p.action] || "Proposal";
   const flags = (t.flags || []).filter((f) => f.severity !== "info").map((f) => FLAG[f.code] || f.code);
-  if (t.status === "failed") return ["Failed", "b-bad", "The ticket failed safely: nothing ran.", `Reason: ${t.failure_reason}`];
+  if (t.status === "failed") {
+    const diverged = (t.steps || []).some((s) => (s.error || "").startsWith("replay diverged"));
+    return ["Stopped safely", "b-info", "Nothing ran: the ticket stopped before any action.",
+            diverged ? FAILED.diverged : FAILED[t.failure_reason] || `Reason: ${t.failure_reason}`];
+  }
   if (t.status === "executed") {
     const r = (t.reviews || []).find((x) => x.kind === "approve");
     return ["Executed", "b-ok", r ? `${what}: approved by a human, then executed.` : `${what} ran automatically. No human needed.`,

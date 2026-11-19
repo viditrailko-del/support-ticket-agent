@@ -322,6 +322,13 @@ Render (prod Dockerfile) + Neon Postgres -> tests -> README link + screenshots. 
   a fresh DB and replays every scenario. Rehearsed locally 2026-11-19: fresh DB -> 9/9 scenarios, reset, restart.
   Account steps (Gemini key in its own project, Neon, Render, GitHub secret): `demo/DEPLOY.md`.
 - The per-IP cap trusts X-Forwarded-For (spoofable); the daily cap is what protects the quota.
+- **Deployed 2026-11-19**: https://support-ticket-agent-demo.onrender.com (Render free, `virginia`; Neon
+  Postgres 16, AWS US East; GitHub variable DEMO_URL + secret DEMO_RESET_TOKEN; manual demo-reset run green).
+  Checked from outside: 9/9 scenarios match, reset 403 without the token, guards 409/404, live ticket correct.
+  On the free instance a replay takes ~5 s (~3.5 s server side: each stored step is its own commit, ~0.3-0.4 s
+  each there) and live tickets took 50-60 s that day because flash-lite itself was overloaded (14-17 s calls
+  and 503s locally too, same moment). The page says "a few seconds" / "up to a minute", and a `failed` ticket
+  shows as "Stopped safely" with a plain reason (Gemini overloaded, step limit, replay diverged...).
 
 ## Scope discipline
 
@@ -337,7 +344,7 @@ Build in phase order. No auth, queues, frontend, real email or real payments unt
 | 5 | Eval harness (unsafe auto-actions headline) | done (flash-lite: 1 unsafe auto-action vs 2 without guardrails, 61/63 correct) |
 | 6 | Hardening: logging, Docker prod, README numbers, CI | done (CI green on GitHub) |
 | 7 | Fixes driven by the eval | started (2 fixes: unsafe auto-actions 1 -> 0 on the frozen run) |
-| 8 | Public live demo | started (replay, live mode, page, reset, Render blueprint; next: deploy on your accounts, README) |
+| 8 | Public live demo | done (https://support-ticket-agent-demo.onrender.com: Render virginia + Neon US East, nightly reset green 2026-11-19) |
 
 Update the Status column when a phase is done.
 

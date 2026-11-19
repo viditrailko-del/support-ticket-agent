@@ -16,6 +16,29 @@ people), with 10 policy pages and 32 rules written for it. Built with [Claude Co
 as a pair programmer. I made the design and scope decisions, verified every ticket label by hand, and
 reviewed the changes.
 
+## Try it: live demo
+
+**https://support-ticket-agent-demo.onrender.com**
+
+- **Recorded tickets** (no AI call): 9 tickets from the eval, replayed with the model's real recorded
+  answers through the live tools, checks and execution. Everyday refunds, two prompt injections, and three
+  mistakes the model really made that the checks caught. Tickets that need a human have Approve / Reject
+  buttons: you are the reviewer.
+- **Write your own** (real Gemini flash-lite): pick one of 7 shop customers, see their orders, write any email
+  (there's an injection example), and watch every step: tool calls, the proposal, which checks fired, and
+  what ran.
+
+It's a free instance: the first visit after a quiet spell takes about a minute to wake up. Live mode is capped
+(30 tickets a day for everyone, 5 an hour per visitor) to fit the free Gemini tier. When Gemini is overloaded,
+a live ticket stops safely and the page says so. The shop resets every night.
+
+How it's built (all behind `DEMO_MODE`, [app/demo/](app/demo/)): replays use a recorded LLM client that
+refuses to improvise (if a tool returns anything the recorded model didn't see, the ticket stops instead of
+showing an answer to a different question); live tickets are sent as the chosen customer by the server, so the
+sender can't be forged. Hosting: Render (Docker, [render.yaml](render.yaml)) + Neon Postgres, a nightly reset
+from GitHub Actions, and CI boots the demo on a fresh database and replays every scenario on each push.
+Setup steps: [demo/DEPLOY.md](demo/DEPLOY.md).
+
 ## How it works
 
 ```mermaid
@@ -144,6 +167,8 @@ every frozen run so far. Two runs is still a small sample.
 | t10: `reply_only` whose reply said "we will issue your refund", so a promised refund never ran (second eval run) | `reply_promises_action`: a reply/escalation that promises a refund, replacement or return label goes to a human | unsafe 1 -> 0 on run 2; fires on t10 only across both runs |
 | Edge-case review: a whitespace-only body was accepted and cost LLM calls; attachments were silently dropped (a "see the photo" damage claim judged without the photo); spam from a non-customer got an automatic reply | blank body -> 422; unknown fields -> 422; attachment metadata stored + `has_attachments`; `reply_to_non_customer` | tested; on the first run: 1 more ticket to a human, unsafe still 0 |
 | uvicorn's first log lines were plain text in the prod image (Phase 6) | uvicorn started with a JSON log config | the whole stream is JSON (checked in CI) |
+| `get_customer` listed a customer's orders by date only; two orders placed the same day came back in any order, so the same tool call could answer differently on another database (the demo's replay check refused a recording on a fresh database) | orders sorted by date, then order id | tested; all 9 recordings replay on a fresh database in CI |
+| On the public demo, anyone could send a ticket as a recorded scenario's customer through `/docs` and refund the order a recording depends on (demo review) | in demo mode `POST /tickets` refuses those senders (409) and shares the live quota | tested |
 
 ## Run it
 
@@ -169,6 +194,9 @@ curl -s localhost:8002/tickets/<id>/approve -H 'content-type: application/json' 
 ```
 
 (The shop's "today" is fixed at 2026-11-15, so day counts never depend on when you run it.)
+
+The demo page locally: `DEMO_MODE=true` on the API (Browser pane config `demo`, port 8003), then
+`python -m demo.reset` to clean the dev database afterwards.
 
 Evals:
 
