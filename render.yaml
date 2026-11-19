@@ -6,6 +6,7 @@ services:
     name: support-ticket-agent-demo
     runtime: docker
     plan: free
+    region: virginia                      # US East, next to the Neon database (can't be changed later)
     dockerfilePath: ./Dockerfile          # the prod stage: runtime deps only, non-root
     dockerCommand: sh docker/demo-start.sh  # migrations + seed, then uvicorn on $PORT
     healthCheckPath: /health

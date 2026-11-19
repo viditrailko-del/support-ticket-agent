@@ -15,8 +15,9 @@ Render deploys from the GitHub repo, so the demo code has to be there first.
    visitor can do is use up the day's free quota; it can never cost money.
 
 ## 2. Neon (the database)
-1. Sign up at neon.tech → **Create project**. Postgres 16, region **AWS US West (Oregon)** (Render's default
-   region is Oregon too, so the app and the database sit close together).
+1. Sign up at neon.tech → **Create project**. Only Postgres (no Auth / Data API), **Postgres 16** (what the
+   tests and CI run), region **AWS US East (N. Virginia)**: `render.yaml` puts the app in Render's `virginia`
+   region, so the app and the database sit close together (every ticket makes a few dozen small queries).
 2. On the project dashboard → **Connect** → turn **Connection pooling OFF** → copy the connection string
    (`postgresql://...neon.tech/neondb?sslmode=require...`).
    Use the direct one, not the pooled one: our driver (psycopg 3) uses prepared statements, which the pooler
@@ -24,8 +25,8 @@ Render deploys from the GitHub repo, so the demo code has to be there first.
 
 ## 3. Render (the app)
 1. Sign up at render.com with your GitHub account.
-2. **New → Blueprint** → pick the `support-ticket-agent` repo. Render reads `render.yaml` and shows one free web
-   service, `support-ticket-agent-demo`.
+2. **New → Blueprint** → pick the `support-ticket-agent` repo, branch `main`, blueprint path `render.yaml`
+   (the default). Render reads it and shows one free web service, `support-ticket-agent-demo`, in Virginia.
 3. It asks for the two secret values: `DATABASE_URL` = the Neon string, `GEMINI_API_KEY` = the demo key.
    `DEMO_MODE` and `DEMO_RESET_TOKEN` fill themselves in.
 4. **Apply**. The first build takes ~5-10 minutes. When the service shows **Live**, open its URL
