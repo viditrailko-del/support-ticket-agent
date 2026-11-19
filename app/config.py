@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     # worth this much or more always needs a human, even with zero flags.
     auto_limit_cents: int = 5000
 
+    # Public live demo (Phase 8). Off everywhere except the demo deployment: the /demo/* routes answer 404
+    # unless DEMO_MODE=true.
+    demo_mode: bool = False
+
 
 @lru_cache
 def get_settings() -> Settings:

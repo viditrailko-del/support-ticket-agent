@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.api.demo import router as demo_router
 from app.api.reviews import router as reviews_router
 from app.api.tickets import router as tickets_router
 from app.config import get_settings
@@ -31,6 +32,7 @@ app = FastAPI(
 
 app.include_router(tickets_router)
 app.include_router(reviews_router)
+app.include_router(demo_router)  # 404 unless DEMO_MODE
 
 
 @app.get("/health", tags=["meta"])

@@ -1,0 +1,170 @@
+{
+ "name": "simple_refund",
+ "group": "Everyday tickets",
+ "title": "A simple refund",
+ "blurb": "Return within 30 days, under the auto-approval limit, no flags: the refund runs with no human. The code pays $29.99, not the $35.98 total, because shipping is not refundable.",
+ "label_id": "t01",
+ "source_run": "agent_20261118T053308Z",
+ "email": {
+  "from_email": "jonas.hartley@example.com",
+  "subject": "Return water bottle ORD-10466",
+  "body": "Hi,\n\nI'd like to return the insulated water bottle from order ORD-10466. Turns out I already have one. Can I get a refund?\n\nThanks,\nJonas Hartley",
+  "received_at": "2026-11-15T10:00:00+00:00",
+  "attachments": []
+ },
+ "recorded": {
+  "classify_model": "gemini-3.5-flash-lite",
+  "classify_prompt_version": "classify_v1",
+  "agent_model": "gemini-3.5-flash-lite",
+  "agent_prompt_version": "agent_v1",
+  "classify": [
+   {
+    "raw_output": "{\n  \"category\": \"refund_request\",\n  \"urgency\": \"normal\",\n  \"reason\": \"The customer wants to return an item because they changed their mind and is asking for a refund.\"\n}",
+    "latency_ms": 1450,
+    "input_tokens": 472,
+    "output_tokens": 48,
+    "thinking_tokens": null
+   }
+  ],
+  "agent": [
+   {
+    "raw_output": "{\"parts\":[{\"function_call\":{\"id\":\"call_6880347091280463893\",\"args\":{},\"name\":\"get_customer\"},\"thought_signature\":\"EroCCrcCAWkUfRPMTJl2cKHa35a_-DWa3hECu4i_cpZUx6JU__cVuQbsWP2-0iD4KRmzEhMxC0gUqx-7tA8HGyjSdxxsCrzFqi-FS3VsqHfuWrw8GlTmegxOBI5ppblXtz852IIje7DaO40RojRF0sE8HLLBZFzL-FdsetcftztTmiQmlilbWw7CJh-fGcRAJfUXbfWWRAkvPgP_ijVl9kJL9-ags5A865NiPteby8LAhPee4SGJDOfdAZh9t_seRZhdg5ONm5zkXlZzaA5nxl4v90BcO-N5iSR_mKIuGWr0pZUa7XXQX3g0XggFp98blDBLy2aUAPQtvYvc-6PYRpkVaxVARdG3F27Z4FXbYks3vc78sksjmmmhQoLS02ApvuCTqLk-yZPOUIX1SOCziPQ91BpCuRiqkvKGnTM=\"},{\"function_call\":{\"id\":\"call_6880347091280464252\",\"args\":{\"order_id\":\"ORD-10466\"},\"name\":\"get_order\"}}],\"role\":\"model\"}",
+    "latency_ms": 1313,
+    "input_tokens": 3044,
+    "output_tokens": 34,
+    "thinking_tokens": 55
+   },
+   {
+    "raw_output": "{\"parts\":[{\"function_call\":{\"id\":\"call_2133862139342849988\",\"args\":{\"include_shipping\":false,\"order_id\":\"ORD-10466\",\"items\":[{\"line_no\":1,\"qty\":1}],\"rationale\":\"The customer requested a refund for the insulated water bottle from order ORD-10466, delivered 6 days ago (within the 30-day refund window). We issue a refund for the item price (2999 cents), excluding shipping fees per policy.\",\"action\":\"refund\",\"amount_cents\":2999,\"reply_draft\":\"Hi Jonas,\\n\\nWe've processed your refund request for the Insulated Water Bottle from order ORD-10466. A refund of $29.99 has been issued to your original payment method, which should appear within 5 to 10 business days. \\n\\nThanks,\\nCustomer Support\",\"citations\":[{\"rule_id\":\"REF-1\",\"quote\":\"Delivered items can be returned for a refund up to and including 30 days after the delivery date.\"},{\"rule_id\":\"REF-2\",\"quote\":\"A refund covers the price paid for the returned items. The original shipping fee is not refunded, except when an order is cancelled before it ships or is lost in transit.\"}]},\"name\":\"submit_proposal\"},\"thought_signature\":\"EuQGCuEGAWkUfRO5bE81syg8zu1DFaMjOTE6lLz8_8Kd13kMmWJ0DkTmuJCdYv5jxdVb8oCc458ti1sVVh4kYmmUM2e4kYacPfSCD4iNWUQN1vyakz-Ax7H4s8Dv_SYlPzP2y7pbHkR1C-1gTK6TBjkh253ELdyRT6JYPmaA6T2FyGA3FVlmG0f11nezhIiei7WpmfPmK4dfOy-CduxgKeCd2nmSfVHAXzEnY2iorGEf1EbAgYoquMmYG3dSAafGMCC3JdmFe4lpnjBsatrxiNk1fdXICYMI1tyTxbGpiCFHL_lqbEGaFPicaDSUCOTcJQkw2PFUkTZKjticljZ7UsAYWofgoxxyldVhIJp8v1Ih7FSUbQ_9IVMFtCqlwbCuuyX_POTb6Vblqc8uxo_dEBuLMjb-mRodR4ppa3OimNhad5tKgLjrUNl4eCYa_U2wmsKFyzQt_ss8NuowB0Srn3ojLK-bQTzDSqQvIwT9eJT05Z9NKGOqbYLGsSqbmzXrqzI1u4_9BlQCWSSR3c6puo20c4i3QC7Zsjzr-yi2FTP0SldfR9HRoD0R-MRLHqKQXTrbUFTAZ1d8_FbYx2JvU-4_QgDNctslEXHOogDxUKe5xVuUvFaO2DlSXmMzET3CtN5Qje-agCSdxl4a6ileTy3cwJBr-WhMYO0oxxxlQPOczkYKid7J4EuKEUsvKk0pZ4DkL0-CBthZb-MS6UBFzeAt7cazmsiPamCbWqcyLHHjx7Nn6OIxqELGqEgk-Y0ckMTEFqHrSXfZXJIMpyOSFQ-lCmsL3s9gDH9fUpOpW0AL-qgBUZyR32mwj8DlB21c0LNDZJW6aPJQkFO0NPVULvQ7VRrgoouAu2DPzpY0emGlgQDvYAx3JpEDLro5K_e9CSh6TwGX5Np6eK4Ksw5bdxZ5dDQXozSbEky10AbuzhEe-zxkT5liac-zQ6m91xDmd7Nl1sl7Rdge7O57BvJtcNmTRsLJgnapXMBgxY1IhoaHpiOntnyNyI31TcLEyy5qz3JeqBQkzeWKFxk6OykbhrPcxkIkLTCtkj5ozBrXP4Gsm-LVgRZLePbt39VKrwB7REbKTmJB3hEMzYRiJk2VmRhVBywCwlLDab9QWT4IxNZw3oZJN60fX-0uCDhkSuJVJUHEDkDiNw==\"}],\"role\":\"model\"}",
+    "latency_ms": 2341,
+    "input_tokens": 3884,
+    "output_tokens": 282,
+    "thinking_tokens": 218
+   }
+  ],
+  "tool_calls": [
+   {
+    "name": "get_customer",
+    "args": {},
+    "result": {
+     "found": true,
+     "reason": null,
+     "customer_id": "C0054",
+     "name": "Jonas Hartley",
+     "tier": "standard",
+     "member_since": "2023-06-20",
+     "orders": [
+      {
+       "order_id": "ORD-10001",
+       "placed_at": "2026-05-01",
+       "status": "delivered",
+       "delivered_at": "2026-05-05",
+       "item_names": [
+        "Chef's Knife"
+       ]
+      },
+      {
+       "order_id": "ORD-10036",
+       "placed_at": "2026-05-17",
+       "status": "delivered",
+       "delivered_at": "2026-05-24",
+       "item_names": [
+        "Running Shoes",
+        "Wool Socks (3-pack)"
+       ]
+      },
+      {
+       "order_id": "ORD-10330",
+       "placed_at": "2026-09-06",
+       "status": "delivered",
+       "delivered_at": "2026-09-14",
+       "item_names": [
+        "Noise-Cancelling Headphones"
+       ]
+      },
+      {
+       "order_id": "ORD-10345",
+       "placed_at": "2026-09-13",
+       "status": "delivered",
+       "delivered_at": "2026-09-20",
+       "item_names": [
+        "USB-C Charger 65W",
+        "Wool Socks (3-pack)"
+       ]
+      },
+      {
+       "order_id": "ORD-10408",
+       "placed_at": "2026-10-09",
+       "status": "delivered",
+       "delivered_at": "2026-10-13",
+       "item_names": [
+        "Bluetooth Speaker"
+       ]
+      },
+      {
+       "order_id": "ORD-10466",
+       "placed_at": "2026-11-02",
+       "status": "delivered",
+       "delivered_at": "2026-11-09",
+       "item_names": [
+        "Insulated Water Bottle"
+       ]
+      },
+      {
+       "order_id": "ORD-10479",
+       "placed_at": "2026-11-06",
+       "status": "delivered",
+       "delivered_at": "2026-11-15",
+       "item_names": [
+        "Smart Watch",
+        "Clearance Sunglasses"
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "name": "get_order",
+    "args": {
+     "order_id": "ORD-10466"
+    },
+    "result": {
+     "found": true,
+     "reason": null,
+     "order_id": "ORD-10466",
+     "status": "delivered",
+     "placed_at": "2026-11-02",
+     "shipped_at": "2026-11-04",
+     "delivered_at": "2026-11-09",
+     "days_since_shipped": 11,
+     "days_since_delivered": 6,
+     "items": [
+      {
+       "line_no": 1,
+       "sku": "OU-400",
+       "name": "Insulated Water Bottle",
+       "category": "outdoor",
+       "qty": 1,
+       "unit_price_cents": 2999,
+       "line_total_cents": 2999,
+       "final_sale": false
+      }
+     ],
+     "subtotal_cents": 2999,
+     "shipping_cents": 599,
+     "total_paid_cents": 3598,
+     "refunded_cents": 0,
+     "refundable_left_cents": 3598
+    }
+   }
+  ]
+ },
+ "expected": {
+  "decision": "auto_approved",
+  "flags": [],
+  "correct": true,
+  "action": "refund",
+  "order_id": "ORD-10466",
+  "amount_cents": 2999
+ }
+}

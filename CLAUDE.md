@@ -280,6 +280,20 @@ Each change measured on its own against the frozen runs and the labeled tickets.
     Both runs re-scored: unsafe 0 and 0 (run 2 without guardrails 3), needless 2/38 and 0/38 unchanged; fired on
     t10 only. Next: more runs (and the main model) before trusting "0"; each new run is scored with all checks.
 
+### Phase 8: public live demo (instead of a video)
+Plan: replay mode -> capped live mode -> one static page at `/` -> token-protected reset + nightly cron ->
+Render (prod Dockerfile) + Neon Postgres -> tests -> README link + screenshots. All `/demo/*` routes 404 unless
+`DEMO_MODE=true`.
+- Built (replay): `app/demo/replay.py` + `POST /demo/replay/{name}`, `GET /demo/scenarios`. 9 scenarios in
+  `app/demo/scenarios/` (built by `python -m demo.build_replay` from frozen runs, needs eval/results/): the real
+  pipeline (tools, checks, execution) with a `RecordedLLM` replaying flash-lite's recorded outputs, steps labeled
+  `replay:<model>` (cost None, not counted by the live quota). Tool results are compared with the recorded ones;
+  a difference fails the ticket ("replay diverged") instead of showing an answer to a question the model never
+  saw. A replay first deletes that scenario's earlier replays (and their RF-T refunds) so the shop is back to
+  the recorded state; live tickets are never touched. `tests/test_demo_replay.py` checks each scenario still
+  ends at its `expected` decision; change a check/shop/policy that moves one -> rebuild and re-read the blurb.
+- Live-mode customers must not be any replay scenario's customer (their tickets would make replays diverge).
+
 ## Scope discipline
 
 Build in phase order. No auth, queues, frontend, real email or real payments until the eval harness (Phase 5) works.
@@ -294,6 +308,7 @@ Build in phase order. No auth, queues, frontend, real email or real payments unt
 | 5 | Eval harness (unsafe auto-actions headline) | done (flash-lite: 1 unsafe auto-action vs 2 without guardrails, 61/63 correct) |
 | 6 | Hardening: logging, Docker prod, README numbers, CI | done (CI green on GitHub) |
 | 7 | Fixes driven by the eval | started (2 fixes: unsafe auto-actions 1 -> 0 on the frozen run) |
+| 8 | Public live demo | started (replay mode: 9 scenarios, no Gemini calls) |
 
 Update the Status column when a phase is done.
 

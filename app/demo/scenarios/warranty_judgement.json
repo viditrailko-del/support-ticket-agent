@@ -1,0 +1,146 @@
+{
+ "name": "warranty_judgement",
+ "group": "Model mistakes the guardrails caught",
+ "title": "\"It sounds tinny\"",
+ "blurb": "One day past the return window, the model offered a warranty replacement. Whether \"tinny\" is a defect can't be checked in code, so every warranty-only replacement goes to a human.",
+ "label_id": "t09",
+ "source_run": "agent_20261118T053308Z",
+ "email": {
+  "from_email": "maya.okafor@example.com",
+  "subject": "Speaker return",
+  "body": "Hi, I want to return the Bluetooth speaker from ORD-10409. It sounds tinny. Please refund.\nMaya Okafor",
+  "received_at": "2026-11-15T10:00:00+00:00",
+  "attachments": []
+ },
+ "recorded": {
+  "classify_model": "gemini-3.5-flash-lite",
+  "classify_prompt_version": "classify_v1",
+  "agent_model": "gemini-3.5-flash-lite",
+  "agent_prompt_version": "agent_v1",
+  "classify": [
+   {
+    "raw_output": "{\n  \"category\": \"damaged_or_defective\",\n  \"urgency\": \"normal\",\n  \"reason\": \"The customer is asking for a refund because the speaker sounds tinny, which indicates a defective product.\"\n}",
+    "latency_ms": 3563,
+    "input_tokens": 446,
+    "output_tokens": 51,
+    "thinking_tokens": null
+   }
+  ],
+  "agent": [
+   {
+    "raw_output": "{\"parts\":[{\"function_call\":{\"id\":\"call_8434746468416538729\",\"args\":{},\"name\":\"get_customer\"},\"thought_signature\":\"EtsCCtgCAWkUfRNiuiuR__p0eTdFIndNCdG317rwp22R1Lnkb85E8XEShmUxyVjR5LURPBIXRpUpUDg1yeVQ53c0XByfxcbQYAcLhbLr4M9D6X4PUhoIEEF3zLowGF9ifx0-QWEGSCJMUNl-1rHm-SknND5bnry_94NhXLXy8kCK3btGHZpjaONpOsIwM_5AFS2j3maGNUrqgk679cecUWsc1-64Qe9uFIxryvBKE_yHSN-3GqH4j6_NyPji6XvlMjCZ-f-XSFyHWgS9FGqlpwZUi9nU73vkU6sBTlTnsA8HJGAbX7d1MzORPo4YFHegMzWWDepNfSjQ1-t9Ju_WwDdtPnl8rFSwBgFgi8v7FNCVMdXf6tz2oldml9ZYmSiTpg7EZqSEKp_EmO-DKY9kCfrLO5pLPNr26AHzPZAC8MH0T5pWjVd2PTlWG14mYf2cVL_G-2Eh274oF1PBRlI=\"},{\"function_call\":{\"id\":\"call_8434746468416537204\",\"args\":{\"order_id\":\"ORD-10409\"},\"name\":\"get_order\"}}],\"role\":\"model\"}",
+    "latency_ms": 3486,
+    "input_tokens": 3021,
+    "output_tokens": 34,
+    "thinking_tokens": 64
+   },
+   {
+    "raw_output": "{\"parts\":[{\"function_call\":{\"id\":\"call_6907127199245842876\",\"args\":{\"include_shipping\":false,\"amount_cents\":null,\"reply_draft\":\"Hi Maya,\\n\\nThank you for reaching out. Since it has been 31 days since your order was delivered, it is past our 30-day return window for refunds. \\n\\nHowever, because your Bluetooth speaker is covered by our 1-year electronics warranty, we would be happy to send you a free replacement for the defective item. I have processed a replacement order for the speaker, and we will email you the details shortly.\\n\\nBest regards,\\nCustomer Support\",\"rationale\":\"The customer requested a refund 31 days after delivery, which exceeds the 30-day refund window. However, since the Bluetooth speaker is an electronic item reported within its 1-year warranty period for a defect (tinny sound), we cannot issue a refund, but we can provide a free replacement under the warranty policy.\",\"order_id\":\"ORD-10409\",\"citations\":[{\"rule_id\":\"REF-1\",\"quote\":\"Delivered items can be returned for a refund up to and including 30 days after the delivery date.\"},{\"quote\":\"Refund requests made more than 30 days after delivery are declined, unless the VIP, damaged items or warranty policy applies.\",\"rule_id\":\"REF-5\"},{\"rule_id\":\"WAR-1\",\"quote\":\"Electronics carry a 1-year warranty against manufacturing defects, counted from the delivery date.\"},{\"quote\":\"A defect covered by the warranty is fixed with a free replacement of the same item, not a refund.\",\"rule_id\":\"WAR-2\"}],\"items\":[{\"line_no\":2,\"qty\":1}],\"action\":\"replace\"},\"name\":\"submit_proposal\"},\"thought_signature\":\"EuQpCuEpAWkUfRPfRoDiqjg626BL-1PZsPT3xQlvwhSDIv7dSNvEYDLwuNBRtCmrgpnmJ4yp1d0um0TgXqNNU9mz6_bYXr5ZU2nNfIlmHLWn9DDztmAKpDP45oK6qJpoKjSU1GJ0fHK9Ug7AmNHARIwJ1qEciF8N7O-K3UQO7YOTxZQvq5TDy_X0YH-xcR8QlLTzVjJgviNWggQyUQAQhG1Rj4iBGLqDAxWvFeU8rTErVLQqbn7QB4zpYgO4WtSBBmRtH4hIt9WetE2HWpM6OEBtBC3kg_4djjFDtL-OkFe1jaPObdu7IFD8IWhGbEoxe491ajuX44QYT5Lnb_9pniMJXBq87uXILHlLpqKBE2Z90HYtdFDEvNzS2IHnWiBaZFiO6McauKWCd24IZeXbYPJS2dpFu1ISYOhLTzPQjo1js6N2ozrDBQOdlZn0VBmjcJ7DK8FWL5liagubySEKQjaEkucjT5TtBK44oSSgsHTvxKIzwCcPRp6rqkSD_6V1tAtHHJkrjkCvCLKgNT564d85OHqd4baiMeoRurxXinWkxwkhG6M3apviHhiLqGEFrNpvhLZFZ77mu-zkAo4wamhQP8OdkNeM4jnCv2_y8JOSHJ54d7NXc8E9usOH6lcPTLZtEjHUqXfHIbJp1Jk1plo3r2s6S4y7Hqlg2bXVXJQtQyOmifJwy_3A8X0fq0aY-SKGdmJf30hSQ-0cwsGoYJ4TLftsfhfAjvl9HAvnf634KignzFOHarlL-Sr7j_WRR2jodW8tAiKJLvjezkMarOPhoVHNbNtCVN9Ko65Mca46eliq1OXmpJyHom9AGxs1RB_zoYf6PbMSLFN_HC_gO-eebSx6y4xKVnr3Lqwl40BRmYBeLHpvWIjo8r7Xcg1OukxRooHnOLgMG1I-LDVLIySFKuh_8xBtLWdahWpLCmuCPMhluNXeiUe1kKqHxucuXEGs_0yl-BBtr7NZqurEuxOgVh1tTAmmQ7z9l6ybkrOuBw88pIlRYUwxBINF4G3Zst5wcIIDdvFhEGRHmEilDBpB_aPhVhZVzBkNwK0UXr03fj9faodLDqIW4OQADKQDa72dzcv8VHyOXPRxpy-F_UFlrztHE0i0p7Co_RgLSrKBgtZqGJdy5DdorTrQv40iZGAwNoKxDqwawl_Yco7lGnQ5WyRl-NzW5-k9g6Um1dgx1QuQKbq0_E-fNPYSErz3wo_NFfZ7vuwckAm91wijzNqDMey4vZ6q8elRKxD-tmsiSL26ZRQ1uOV5meqqVM4jevISG_KTqTK4uvo6eMotjyGqAwok2uRdRt-gPbTQmA-AD_bL4QAmI2Nl7v9O8yO-mQKxPP8M1k1dkve-XwHDgSHlHiCftRC5QIcH3Ur1hegA2DlN25U_IFNFajLF5xK39HsbrJU0jSTggInenCPFrS4Wfl1l6OCxgpohkxd7Ncc9otR3ATw5pl5VrVGubvK9wHbmx0IeZSREcXATavnUaoEvPicy91zi6_jEB-NTt5wGPStGLYjj4vteItCxNB-RcYsTfAAUPEzpwQLzjRM0rH6C5SRn9AU9bUII9FiGFygiGAnv01JB7gjTYDQk92NV48BhLZwX4IadyKNoM4XmzqQ-FpO0Jt2x4MEPi89SuLBNr0e8g_wWZu_x2HFIGpRVzgfj0JQFW2QE9uD21pGXdtUTF4HNn0PquegnWVn2azElhLHmnzH-j0VHL-S6T-0ACB5Bca5cCUdmrnXgZi50oHIa8XqZ_MQjJKYhpskhOwVNY74txQ62YhKEK1aHBpWr-YtZ1MkAtbx4mhkWpfWAaq1hx9XDNCOkJcaCkG4Tuh3Dgk1ZPpeqxABAdwQ3XdsZUyAkJe5bNM4b4eqTTZ09tt7yw2pE3ze4e9HjQwRiT4JtNmTZpQ8xwgosqOoxBm83NVwiUCXKYaHJRC96v65xmis6DjCaWgjnnMBLBUrCx44Uad0dTWNdeGyj0IbappxOiE_Kh0KDuucGC97jcH2tQm5fv3HPPJOWc7UJrKMwSNGniSdXjLbbr9w8nVockPxaZ4TclE1TxLrDzgtNR7EETL2qy5rT8MCcLTl_Iw0f7-54xO-PKilNkeqIR5I8McgqGyayQ9ypogud8l0TUdgg3eQjjiFvOC3RZWaM-ao92r7zD34gM14YxEtH5drtmTy7EJKmuHRGkVbwTDu-Wddl5PhVIV_Sibx2vFBbpGjiItiQjxeZ-PHIOXHoyGjSeK0PEm84S_Wshrfu6z5su4n0s1cweD2naEjcoE35hFD6qIkbKU0wJQqEFBUFzsIfOvq5jJtNf4ghnlkCw5bMpnI5XkmdUuzkN93B6SNe0Pp-Sdj9Md3B2_YoHgIcpL2skAp7O71VVhHty1kTWnSFu77NdndB7-bulMI6XT8VXAnR2ddWJx4BSzXrCiNbH-gtHojKnt754L98qOrWJ_e1ZCHRmP_h-8JydeUotLj80Y701U4SlJEbK8skS_6CFF4Oj4ap0cBdFeSMsJZc6yiYJqp9ekn4o5irBlLrDIyuIFq3OJwuDnJ3nh70iugFBnHm4uocrSwyoPur7MY3B6uLlqwf7i7yo-GvAEaVzwiRRqR-349GfvZ3havuhjgLTiTLAeaxUfzosfEUIKuS1SpeRxjyVcJAKW2vwOQYkf1Fi1K_1zAmrz4Hxhgn0WAUAAPJUU3BZZ5eUtYFcYv9IVGbZEHovH0rVYdzVtpimNbihy7CL1AKJqHYz76gJP9iGOzFTZ_j9FWf8D_CdoQuRRWJVE0KP9Vb2mPBUcsLBkl2vpfrddiYBq216duOH07xq_I4UQeIkA6WhRPXIr5Be7D-S8a-hs-r38EiBQY4jpfcnxZgLJHLkndVIBi_VTwL8hOs4uCfYLlCXmI2yfq6KoqiAOkRW6AY--ju6blSlv_1K9LT-QfuBmkLA9ML89rSnJVYsXjR_PDgFL5pH1L8iGmxzTBzETgxWoOMx-IIqZiyXRjakC4XF0GwXWbwbcuIKh7t56CettjMUz9TAMgDLlbVWI0ZH5C_qSiOcQ-7YPXOrUwBVZKwejVio2ARFZZjF-sQ4qihJ1t-iOFPupSJWvjmLv5g6QseS9T-vjhN2ZtAKADl-mBtNTlAYRzhYHynwD8TeV64aDqo890xMwt11NVU_GewP2VHcVTZRnPBCwS4xkVVZX1OXs-gODv9D7aAbCHqedFRlpef14pwEwgQKSVdMFUka_ydng-dd1xJk_Z-wvHOcq1zA9V7lNS5Cb9Uo_2Y6Evu9gs3JesMcNw9wzEg7Xw0Raf2b95QTkiz_kR8FvIsDs7pFFBcz5HOri5wXu6-kAecw4UUmCQWbllgeCoJ9jTIP54rtRxQ8e2DDq4-leysDVDhEbdWymWiN_r8XnkeRE-Wob5E-1pEnCpIqezC-e_gs2kfmafRz0DNilPFuaeq-i4grwkcT_3IiRZhYcZRJSULN1kxwsYNjzxUX7C3OZLddeV2xYhoFpsWxF1DGrMSlW73L4wi8uuu8F4hkvvFd7qyIYxiirjUW-eeEdNDvI6GwudaeeSdv5bhLxj4eNWLrhhHzy2jggCBrOQJjrFr2k-wYqvpFk1X0o1cNnploxNILE47jfu67USlqqIMfHkiTIokANDUA5ySdKI6ad3jFp7-4tVlu6RSlvEJb6xyeEMPRLOtzXs52KOvnF_ilGpPPITC7fanAGoFVnUs-sgCOTvx47tQfJl1Q_Ycn4vjYbYT0EsqYTA11z1t4D0oT3H3r4oRbH3KbnmL4Q_UHTGZnK0Zej6ZWen-J_J-MeEy1Tki-gL1cH17RNUGzW1hchG0WzeH19soGCNmWmdVtYnuKAQyE_wL3tWAdJ-9qTTEGORZa_uigkkOunibFdE29Un1YQl-o0pK2a45olrTRJ2oRIIJQ_vyfXvXdh_ygg2TahBPTEooHUjwuGw5X-6GQi3RVAyMMmtSOizd96uFKo5pIgaTZjkMAlZroXD94BHRYwuCpXMGcBQO6w7sguoLhhI0oo_79ZVVih-4biFzhzEtCnw4XUhOGNnhlWXqxRGDFeIEPN-K202-EzLcxwP4A3QUusAVcMR2h51uIwK7qytEqv3xz2UtV9HUJXd533LG_VhMGJW3Yb7xfUljKglsWOdfruOxrjA-bGe70cP-J9tzG2d54llS20hMnhTuvRGj60vKquYGjmClxjKTStjylV0ymIn5_pJtCm_h5Ue15RwfRJ6kjlOFYBOaXZ9a2k-vuWSTc6usO1z0b7OxVoCQQ5nPnWK6ciUoZf0ZPrYEdhkvDKuAYIqnvcsw1cAE6rfLmBTqgB_452BaWFFt2mrnXtmISE6JrtVfYWMgGybFpMSrKYy9RxoTfSj0RlIO96ojdl-XScZKuRy2lygnKrNjYfry6GFqNGdOnKepLyHlbNDjY7cURzo5797zMp-h6Xl0GviDnGdSZeicyTIQx3rA3hiqgbs1qM9A2kP6A5ZNcfkWA7M_Bw0IPK01uCzAzJcjxNJSoP2b6XgFSPQxDH1dqGLi3gLPYx8rVNg3-NnBx9TecsjzIbU9X8vO4pgbVFu7rrNOIN3Mt2V-7ihyaUr6Qz88tx7LQ_0p3kO_khmY9V9NZzvUmlYL9Z-Z7tBzjMj_C-ZmLRW-l9hxgSe2dyxkDph4P7j5_IeHnxDAq5oqTaGkQD3EzJkZ4-pRJc60P2IonUJKDKPwdv4QgIx8PkPO_dt-J2nd8RZz9Q8xx8ff5W42IHBI_jcjpCIeiW979svrEo1AMsCCBdby0OerzXM2MURWKQgEkEo8n9RukEmjeTRAilJq-tTU_zdSZdfV49RJqXAoBgLAsM5YK7MbNUYvruPgnyoDkwp_B72eeuVmvV4gbPCPF3eTjLcO236zWEtz7up8JTh4mfKKBt1jpzcNzkf0ZtQIZmstffiWlzm-S0IZJAomjBELRdmv1p53TtJRYaOYU0PBvPTWbGbza-qFm7SscEUsVq3p7bCLawh14dCuId1AcmbOBRhQ3QYqnnQA1skRc47-N8-xdsMMU72WB90oJm9xvTjgf5_bX8UT2r1ZJkZ8ZSLZJZJkVtFLChM2-XssGsb9EuhuV3Ilv0uvtghyvMMZbn0lxVHWwnvF011RK1J8BXpzyCJsWovhuSRukfoSWnZAB6-YmMlhgIVsEoMmeWZRN2SxqP0QMCWEW3cyjNDDw_7IymcMUWohhN-ZTWKA2woibhVqJroJn1Xaw6hQeIPxfYpvyDhaX55p2dC4UESqEHiI7gfF3Cf6u8zs5VMitzLtCj1dQHfoMC7SXVpEMq9CQpO4CzluZ0pB_98U3-qdXlgqx2nBvj1l1Qveot_YKcIJYmhGKo3YT1qpQmygKzZ5G3l1G0lwhQBFSC0oP935pwL9fQB5oSnX7662ZNdLFr58aqttS3PUsZ9OEMYsWLRgohAmV5AZ700f_8jBqgJmIC48HXbAk5h_q4afHWv7Q36qEG1Su4suvi-EI47EZqxD_d1DmpF7XNfeeoTSYeiCxPztu81bkUlM3exrX1bl4Fn9h64ENplldm2mA4KFeNCTv0ShDddTZaf7o7TSQLVv3lQqMW13N8aaye3ScJv9DUj_wB4rYKJzZ4ots7DD5sF4uGTaBM-jzrxUgfATJREbsGgSTzO35OaTkzY4slmDsYoZdXUeoXmLmB21EZbwcSIC7589-gDpfRs9RL5qtsGsiNMkKICT3czfuvyPxkjK1b4pHWhIYVT7Kwy7DKQcwVENvI3fCJ5TXtuJAAQFN9eZoZbToQVXF4CR9c4sZ-bzo3eEOeXR72XdSHwI-jO3G-bsQmuBafb9809VQ9Shy4Lov97mwK_ll-39-NQOOq4Dp8TxvD-a5BWYujX6IiXKgqXYsybFDk0hjIz2_ceEwA1PxCnd2-cLirtO3mm1HI9QO0ua2sdw5vTROoKBjzrX-fmIyEAMocu1e_7ySYJlYaxaNc8YUvqdl4wUpJasMsJnzMtpIcJNv23dmJYpNeSnZrZj5R7iprX4kzMrEuP-w0QQ01uQLiXSyDmUeMG6x7KO7HyzCyvbAJbp4lEPeh39ZqEF_O4riN4XpNopmMc2XOAXxkwfr_XrGkqD9BhZQBKDwAD0yRCJEHxm6XanVwQ50Ex_Xg1PQX5xmEAIXlcruFU8CEN0NBzBtXmMzqz5K482NVvKnXOT3MPhNL3J5mjNZbPicn627PouVZ7VAKT2a4UIjFey7221CEqm2JT6vNz3C943_9PkYeUG5Hc5_9HDypcyzSTWc4jUSobCq4APifDURY2YQlUEJ_loJT5Gyxj0hKpgtQBp5HORWY_JlPpVNRO1BDq6K7OVnrW8wvlO1JwqMMjs3V_DSpcyS_vWwZprZ56sDEY9IRVHF96uWwEmO39ezrXvCDkWPR0LTGl2h88b5SYvbRwMbIHNwyj0h1HKyf2OAVdQAob4asPFibca-H5osniQ_G3GTmt2Y8XFgNNxIpD9me35_jbJSJwn0FY1Ii87Q52M2PWvXUE7C7Xvnm8RD7r4TxP1R29cDo498M1qnk6z_exmYYbw4yAn4OkQAb-6nky6Tq93bFcN_Ut1CXbe16PpW0XdFnmQy1gRdwi7YqgemxlCIeUXx_wqnTB7uWQTtQHNbo-_52QP0WY_8vKHKyP5xm7bBE2Hhyxg7RdOrOfJHgL2OuQFVbejkXWyJQzrm0OfjvdxzqxKoHLAH4yYgCLjQbeMgTbra4BlHdlff4_x0DJCZ_Rvc3Bd-hfVoOAnZd8xqPs5CVnbPHyrDnb_5m18zCorgyAzXVUC8h3SUAy-eNsi8ob1PUnJdLjunB1g6oY4yFAnH0J5mdHPyCFnntpHhKizwd0D0ClrwS_FnmCzWeSOhSGQXnIcJDgcd4TL3-AErGzdBSsH8rsmoUqBrMBUzgcEYBOuMBUHBa3iLtpEZNlv80DL91NHP0aDzyXo6W9rysqLnJaPbK319MRShutrCxbogCI2SeFrUqXrWxNTt41x7lo9acJ6alGJB-g2iASZ3tJuKQUK54fklvT1ny9rgUOxP8ysc9ENJwa60_29tInMIAle-cZHYKuMm5OUdpo9xzpfgwwpRWM2NhpAXAuOkFsJLpbfEzfEvD8VfTcRFfvf-PjvKsaYPd-Wr24FZpRSYt4=\"}],\"role\":\"model\"}",
+    "latency_ms": 7875,
+    "input_tokens": 3666,
+    "output_tokens": 383,
+    "thinking_tokens": 1381
+   }
+  ],
+  "tool_calls": [
+   {
+    "name": "get_customer",
+    "args": {},
+    "result": {
+     "found": true,
+     "reason": null,
+     "customer_id": "C0149",
+     "name": "Maya Okafor",
+     "tier": "standard",
+     "member_since": "2023-05-21",
+     "orders": [
+      {
+       "order_id": "ORD-10141",
+       "placed_at": "2026-06-28",
+       "status": "delivered",
+       "delivered_at": "2026-07-06",
+       "item_names": [
+        "Rain Jacket"
+       ]
+      },
+      {
+       "order_id": "ORD-10207",
+       "placed_at": "2026-07-22",
+       "status": "delivered",
+       "delivered_at": "2026-07-30",
+       "item_names": [
+        "USB-C Charger 65W",
+        "Chef's Knife",
+        "Leather Belt"
+       ]
+      },
+      {
+       "order_id": "ORD-10409",
+       "placed_at": "2026-10-09",
+       "status": "delivered",
+       "delivered_at": "2026-10-15",
+       "item_names": [
+        "Scented Candle",
+        "Bluetooth Speaker"
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "name": "get_order",
+    "args": {
+     "order_id": "ORD-10409"
+    },
+    "result": {
+     "found": true,
+     "reason": null,
+     "order_id": "ORD-10409",
+     "status": "delivered",
+     "placed_at": "2026-10-09",
+     "shipped_at": "2026-10-10",
+     "delivered_at": "2026-10-15",
+     "days_since_shipped": 36,
+     "days_since_delivered": 31,
+     "items": [
+      {
+       "line_no": 1,
+       "sku": "HM-206",
+       "name": "Scented Candle",
+       "category": "home",
+       "qty": 1,
+       "unit_price_cents": 1499,
+       "line_total_cents": 1499,
+       "final_sale": false
+      },
+      {
+       "line_no": 2,
+       "sku": "EL-101",
+       "name": "Bluetooth Speaker",
+       "category": "electronics",
+       "qty": 1,
+       "unit_price_cents": 3499,
+       "line_total_cents": 3499,
+       "final_sale": false
+      }
+     ],
+     "subtotal_cents": 4998,
+     "shipping_cents": 599,
+     "total_paid_cents": 5597,
+     "refunded_cents": 0,
+     "refundable_left_cents": 5597
+    }
+   }
+  ]
+ },
+ "expected": {
+  "decision": "needs_human",
+  "flags": [
+   "warranty_claim"
+  ],
+  "correct": false,
+  "action": "replace",
+  "order_id": "ORD-10409",
+  "amount_cents": null
+ }
+}

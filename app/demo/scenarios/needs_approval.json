@@ -1,0 +1,230 @@
+{
+ "name": "needs_approval",
+ "group": "Everyday tickets",
+ "title": "Too big to run alone",
+ "blurb": "A correct refund of $94.99, but at or above the auto-approval limit: it waits for a human. Approve it and watch it execute (once: execution is idempotent).",
+ "label_id": "t02",
+ "source_run": "agent_20261118T053308Z",
+ "email": {
+  "from_email": "vera.fontaine@example.com",
+  "subject": "Rain jacket too big",
+  "body": "Hello, the rain jacket from my order ORD-10484 is way too big for me. I'd like to send it back for a refund please.\n\nVera Fontaine",
+  "received_at": "2026-11-15T10:00:00+00:00",
+  "attachments": []
+ },
+ "recorded": {
+  "classify_model": "gemini-3.5-flash-lite",
+  "classify_prompt_version": "classify_v1",
+  "agent_model": "gemini-3.5-flash-lite",
+  "agent_prompt_version": "agent_v1",
+  "classify": [
+   {
+    "raw_output": "{\n  \"category\": \"refund_request\",\n  \"urgency\": \"normal\",\n  \"reason\": \"The customer wants to return an item because it does not fit and is asking for a refund.\"\n}",
+    "latency_ms": 5459,
+    "input_tokens": 458,
+    "output_tokens": 48,
+    "thinking_tokens": null
+   }
+  ],
+  "agent": [
+   {
+    "raw_output": "{\"parts\":[{\"function_call\":{\"id\":\"call_1732700633430695678\",\"args\":{},\"name\":\"get_customer\"},\"thought_signature\":\"EokBCoYBAWkUfRM4aGCwjzxVxvj72EI8qWKQDustj3qBAl1-I5sf6nMu968KLOXjiL6I79UJH5ujJSha3-iqNU4ueg1KKMxzMV_jbWwWHW_iAy-2H4tadhmtqEyQEHecAEx2M3kpMW0BEvCjcaEDHscZjklK33w4VvqpNJAUwdUOWYJ_T9usyAU3SDY=\"}],\"role\":\"model\"}",
+    "latency_ms": 5554,
+    "input_tokens": 3030,
+    "output_tokens": 10,
+    "thinking_tokens": null
+   },
+   {
+    "raw_output": "{\"parts\":[{\"function_call\":{\"id\":\"call_224460369670462548\",\"args\":{\"order_id\":\"ORD-10484\"},\"name\":\"get_order\"},\"thought_signature\":\"EokBCoYBAWkUfRN0KF7fmk1wDnBtnayXM4J6xx58snx60El02kk3tlhT20pGUhvFFH9Nat2dSfjhgGPUI36JQnDxrxgguTHnbDX5qezEv4foxLPTjgzHmkzfZsReV-VFQqg98wZYBwOUsTqRMSa0D519QGAF6bWygRuzoRbqT9a8nUfNaZ2A9GYuskE=\"}],\"role\":\"model\"}",
+    "latency_ms": 6266,
+    "input_tokens": 3944,
+    "output_tokens": 24,
+    "thinking_tokens": null
+   },
+   {
+    "raw_output": "{\"parts\":[{\"function_call\":{\"id\":\"call_16279844269075022811\",\"args\":{\"include_shipping\":false,\"action\":\"refund\",\"amount_cents\":9499,\"reply_draft\":\"Hi Vera,\\n\\nI can certainly help you with returning the rain jacket from order ORD-10484 for a refund. \\n\\nI've approved your return request, and we will email you a prepaid return label shortly so you can send the jacket back to us at no cost. Once we receive it, your refund for $94.99 will be processed back to your original payment method within 5 to 10 business days.\\n\\nPlease let us know if you need anything else!\\n\\nBest regards,\\nCustomer Support\",\"items\":[{\"line_no\":1,\"qty\":1}],\"rationale\":\"The customer wants to return the rain jacket from order ORD-10484, which was delivered 2 days ago (within the 30-day refund window). We approve the refund for the jacket and will email a prepaid return label.\",\"citations\":[{\"rule_id\":\"REF-1\",\"quote\":\"Delivered items can be returned for a refund up to and including 30 days after the delivery date.\"},{\"rule_id\":\"RET-2\",\"quote\":\"Customers can return some items from an order and keep the rest. Only the returned items are refunded.\"},{\"rule_id\":\"RET-3\",\"quote\":\"We email a prepaid return label once a return is approved. Customers do not pay for return shipping.\"}],\"order_id\":\"ORD-10484\"},\"name\":\"submit_proposal\"},\"thought_signature\":\"EokBCoYBAWkUfROviIE6A8ndCr2ee026CUSvysy_Q-w7E_X87HlmYUyqyOkUUhUrUkrNl-SqVNpbZEUcapzV57ccEYvaY3YHPDQH7Ywqc5l1zHEo6Hn5I8430svv6UA81RKQgt4LCFHKjQBemOhDtISq3a67q08CeYyefHciBScfWK_Hrq-tYR12cT0=\"}],\"role\":\"model\"}",
+    "latency_ms": 1633,
+    "input_tokens": 4179,
+    "output_tokens": 343,
+    "thinking_tokens": null
+   }
+  ],
+  "tool_calls": [
+   {
+    "name": "get_customer",
+    "args": {},
+    "result": {
+     "found": true,
+     "reason": null,
+     "customer_id": "C0120",
+     "name": "Vera Fontaine",
+     "tier": "standard",
+     "member_since": "2023-06-04",
+     "orders": [
+      {
+       "order_id": "ORD-10012",
+       "placed_at": "2026-05-07",
+       "status": "delivered",
+       "delivered_at": "2026-05-12",
+       "item_names": [
+        "Yoga Mat"
+       ]
+      },
+      {
+       "order_id": "ORD-10052",
+       "placed_at": "2026-05-22",
+       "status": "delivered",
+       "delivered_at": "2026-05-29",
+       "item_names": [
+        "Smart Watch"
+       ]
+      },
+      {
+       "order_id": "ORD-10077",
+       "placed_at": "2026-06-02",
+       "status": "delivered",
+       "delivered_at": "2026-06-08",
+       "item_names": [
+        "Noise-Cancelling Headphones",
+        "Wool Socks (3-pack)"
+       ]
+      },
+      {
+       "order_id": "ORD-10134",
+       "placed_at": "2026-06-22",
+       "status": "delivered",
+       "delivered_at": "2026-06-27",
+       "item_names": [
+        "E-Reader",
+        "Clearance Beanie",
+        "Desk Lamp"
+       ]
+      },
+      {
+       "order_id": "ORD-10136",
+       "placed_at": "2026-06-24",
+       "status": "delivered",
+       "delivered_at": "2026-06-30",
+       "item_names": [
+        "Power Bank 20000mAh",
+        "Wireless Earbuds"
+       ]
+      },
+      {
+       "order_id": "ORD-10191",
+       "placed_at": "2026-07-18",
+       "status": "delivered",
+       "delivered_at": "2026-07-26",
+       "item_names": [
+        "USB-C Charger 65W"
+       ]
+      },
+      {
+       "order_id": "ORD-10221",
+       "placed_at": "2026-07-28",
+       "status": "delivered",
+       "delivered_at": "2026-08-02",
+       "item_names": [
+        "USB-C Charger 65W",
+        "Merino Sweater"
+       ]
+      },
+      {
+       "order_id": "ORD-10288",
+       "placed_at": "2026-08-22",
+       "status": "delivered",
+       "delivered_at": "2026-08-28",
+       "item_names": [
+        "Wireless Earbuds",
+        "Bamboo Cutting Board",
+        "Rain Jacket"
+       ]
+      },
+      {
+       "order_id": "ORD-10294",
+       "placed_at": "2026-08-24",
+       "status": "delivered",
+       "delivered_at": "2026-09-01",
+       "item_names": [
+        "Bluetooth Speaker",
+        "Leather Belt"
+       ]
+      },
+      {
+       "order_id": "ORD-10301",
+       "placed_at": "2026-08-27",
+       "status": "delivered",
+       "delivered_at": "2026-09-02",
+       "item_names": [
+        "USB-C Charger 65W"
+       ]
+      },
+      {
+       "order_id": "ORD-10305",
+       "placed_at": "2026-08-29",
+       "status": "delivered",
+       "delivered_at": "2026-09-05",
+       "item_names": [
+        "Rain Jacket",
+        "Wool Socks (3-pack)"
+       ]
+      },
+      {
+       "order_id": "ORD-10484",
+       "placed_at": "2026-11-08",
+       "status": "delivered",
+       "delivered_at": "2026-11-13",
+       "item_names": [
+        "Rain Jacket"
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "name": "get_order",
+    "args": {
+     "order_id": "ORD-10484"
+    },
+    "result": {
+     "found": true,
+     "reason": null,
+     "order_id": "ORD-10484",
+     "status": "delivered",
+     "placed_at": "2026-11-08",
+     "shipped_at": "2026-11-09",
+     "delivered_at": "2026-11-13",
+     "days_since_shipped": 6,
+     "days_since_delivered": 2,
+     "items": [
+      {
+       "line_no": 1,
+       "sku": "AP-301",
+       "name": "Rain Jacket",
+       "category": "apparel",
+       "qty": 1,
+       "unit_price_cents": 9499,
+       "line_total_cents": 9499,
+       "final_sale": false
+      }
+     ],
+     "subtotal_cents": 9499,
+     "shipping_cents": 0,
+     "total_paid_cents": 9499,
+     "refunded_cents": 0,
+     "refundable_left_cents": 9499
+    }
+   }
+  ]
+ },
+ "expected": {
+  "decision": "needs_human",
+  "flags": [
+   "above_auto_limit"
+  ],
+  "correct": true,
+  "action": "refund",
+  "order_id": "ORD-10484",
+  "amount_cents": 9499
+ }
+}

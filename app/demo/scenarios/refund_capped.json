@@ -1,0 +1,198 @@
+{
+ "name": "refund_capped",
+ "group": "Everyday tickets",
+ "title": "Refund capped by code",
+ "blurb": "Part of this order was already refunded. The code pays only what is left (REF-3), whatever figure the model wrote: the model's arithmetic is never used.",
+ "label_id": "t49",
+ "source_run": "agent_20261118T053308Z",
+ "email": {
+  "from_email": "ava.whitlock@example.com",
+  "subject": "Return the speaker",
+  "body": "Hello, I'd like to return the Bluetooth speaker from ORD-10473 for a full refund.\nAva Whitlock",
+  "received_at": "2026-11-15T10:00:00+00:00",
+  "attachments": []
+ },
+ "recorded": {
+  "classify_model": "gemini-3.5-flash-lite",
+  "classify_prompt_version": "classify_v1",
+  "agent_model": "gemini-3.5-flash-lite",
+  "agent_prompt_version": "agent_v1",
+  "classify": [
+   {
+    "raw_output": "{\n  \"category\": \"refund_request\",\n  \"urgency\": \"normal\",\n  \"reason\": \"The customer wants to return a speaker for a full refund because they changed their mind, with no mention of damage or defects.\"\n}",
+    "latency_ms": 3637,
+    "input_tokens": 445,
+    "output_tokens": 53,
+    "thinking_tokens": null
+   }
+  ],
+  "agent": [
+   {
+    "raw_output": "{\"parts\":[{\"function_call\":{\"id\":\"call_10663241125204648783\",\"args\":{\"order_id\":\"ORD-10473\"},\"name\":\"get_order\"},\"thought_signature\":\"Ep8CCpwCAWkUfRM1bnrcibUQ-DObluTTleEe21p66C6DQB5SnaGcw33EF3EsA14n6NuyhvV_Av4RPlRmf9STtZi1QOjPDl0gTCb4oBXXfau6uTPceM6p7X0e6meFNBELxJMOf0ct4OotylVNTmJDUpeqew8R90eCveL7PJoUcm8j_LJQf5Tc0OjQA9SXCP47MsXNnIJ9bxd0Yx5l1kD8JEuzy9TpGfX1jwa6SOxmkOvt19C0ZvtpzlTJpbk96iv1ct8GsJ5pEPC1PXav5QLw3wiJzGeR-yH7UDp8_4_KX5vWg5yEz-T7wgWsz7oYi2eqOF0620bQR4qjEfgZDNKkDrtrHzfjpKvHGzVg_5x6VJJ3lqKG8E81dylumH79NfTvrbo=\"}],\"role\":\"model\"}",
+    "latency_ms": 3071,
+    "input_tokens": 3017,
+    "output_tokens": 24,
+    "thinking_tokens": 47
+   },
+   {
+    "raw_output": "{\"parts\":[{\"function_call\":{\"id\":\"call_7062747652266196960\",\"args\":{},\"name\":\"get_customer\"},\"thought_signature\":\"Er4BCrsBAWkUfRMpdEnJCGeUuDYyfhdMgz3F5LgblJoB1h9M3x3FD9huXmtlG2G8QRkrtd7zRrqIxvsxHUmMACQH4Dk9JOLTSX6gwwCZMHc9ppg6uupqjTIDxtplz22yQtV9O3tVm3_UOTpfSojlMSG30eEppS8R26cH1axedQeVYdQxXavL7lkU640CILLtJmF6XqdzxsUtKq5Q8Cozfb91TnTyUCU6Itu6J38nrDt5vIECVlrfcaIp2psq7b_Xhg==\"}],\"role\":\"model\"}",
+    "latency_ms": 3279,
+    "input_tokens": 3303,
+    "output_tokens": 10,
+    "thinking_tokens": 14
+   },
+   {
+    "raw_output": "{\"parts\":[{\"function_call\":{\"id\":\"call_1478158620617319232\",\"args\":{\"order_id\":\"ORD-10473\"},\"name\":\"list_refunds\"},\"thought_signature\":\"Eq4ECqsEAWkUfRNTqACM616LSTc7qKLHiiYV0uRVKhTW7AR74zWvJyc3vHYzfGP5P8Wl9pXLB32HLX2L_P_rfEn9iQjsMVqSqYHHVqssWzauW2bpdL-WzYo2yEhkXoaQwurXZByAAJ2r2TxKuSbs8NpTzg3CWfDelAL4zYDd0ubtfab1UerkK3bmr_dfTnZhoO9IpSJTzR9NXDAgIwBBarNnwOk9JePh-ajJ3S_FKJgH3AhZgEt9bK9xF0okxosU2TlTvlLV0cG7Aah5vCV7Pu0yZB8C-bjBdtJX5qlDAGU34jU6gHxE1E54aeNoqM9zzsrp8i1ij85DmFoyZprUhV88DaXOsaLcv8j73iURAQDLlkTH_jO2LTqpCMLhtIEaNyjDLIPqxIcKBbeo0JWUVs73i0y6rNTZwhXbtiTnAyT3QMf3AuUGQJIyeWwaLLJf_MZBnlWQw99bTrvH9rHNYzcr_J7uS-ozV-V6QZzPtMYiI5IQ2mz3Y_Ljl5VCyAj6NoBllUw553Q6F1knhyifgxa4LXO4bOYx7-aN6qHQ9EHvWam1WZ7DCU-Q7CfWKns3cLIWR303UDrI4MLFWxT2HzTI2kn5WAArI5DJS0S-UMqVsWjkbbACwI9-WelsOF0QLuQaL5kECfuvJvBjxXo4sAVeupkLuFvQGy_qWNd8VAparhhUtLJFl7pi5UGICmL1iFK0pAdduKo1a8cZ7jYSRHAtRsCX7xb-9YAgYNGkijei\"}],\"role\":\"model\"}",
+    "latency_ms": 4304,
+    "input_tokens": 3782,
+    "output_tokens": 25,
+    "thinking_tokens": 146
+   },
+   {
+    "raw_output": "{\"parts\":[{\"function_call\":{\"id\":\"call_5804616375854684346\",\"args\":{\"reply_draft\":\"Hello Ava,\\n\\nWe have approved your return request for the Bluetooth speaker from order ORD-10473. We are issuing a refund of $30.98 to your original payment method, and we will email you a prepaid return label shortly so you can send the item back.\\n\\nBest regards,\\nCustomer Support\",\"items\":[{\"qty\":1,\"line_no\":1}],\"amount_cents\":3098,\"action\":\"refund\",\"order_id\":\"ORD-10473\",\"rationale\":\"The customer requested a return for the Bluetooth speaker from order ORD-10473 within the 30-day refund window. We are issuing a refund for the remaining refundable amount on the item, excluding shipping.\",\"citations\":[{\"quote\":\"Delivered items can be returned for a refund up to and including 30 days after the delivery date.\",\"rule_id\":\"REF-1\"},{\"quote\":\"A refund covers the price paid for the returned items. The original shipping fee is not refunded, except when an order is cancelled before it ships or is lost in transit.\",\"rule_id\":\"REF-2\"},{\"quote\":\"Customers can return some items from an order and keep the rest. Only the returned items are refunded.\",\"rule_id\":\"RET-2\"}],\"include_shipping\":false},\"name\":\"submit_proposal\"},\"thought_signature\":\"Eq8UCqwUAWkUfRNZczOV8OmqZBH5J9I_akKRp8zAX49hAat_FPw54zSoRmkvEvF7W-UwVTnFLh9u_ZJRwwgMx7m2WmDHsVzM5Vic2oxzjK6-wAyzC_0807FcdfPBRcREKuguhVhfhimiXC4SaJQxO31u8114xs8g9HF54BROcd3iM4ga8mDcJoHWTYNgA6zhcA3-rjgdEF_JAOrXFxYVJQR2lej2qCLQBmm22TJ8E4AfYNMgbf0-ipoBQiZPjvYqxcmFXcsehJWcKYquG7H0Oqmi-J25jNk5KA6lonw5Awmrft4yezylDH_GFHJ_fQYounZK7QkioN68F_wnBDxHXwz0jfkvI_ogKsF-wkhEOFlnfoy6nY0bkqwzprumFlpDjksetxpgs0drXFbSsN3oCaSyS7tj6m13sMFcU2YOEXDZyY3WlmvcRw3MrLsslM7gnt82PhPkPxh_u6ph7ZCNwVZBQXs_1qe-Yp_0WRITpflhvJZqOb2AYwxFZT-329mJKfaPyXkSHKoSFAq7l0f6gyDoqjX9ZuU4htNBDrrkFI0eAMnkbDGY1izUJRozo0FEKkqyKI5Zm3NfLqPTaOnn-7GOz_YCjWGVrY-jnQg5m8Xla3AJlnKre6n_YAAspmdJJUErEycV6JhKS2KHP3dwp5k5qdCkYktbrkg-SDsIykDbTR4LyOPp2GxJLH8CTTvK2dQD9-nF7381Z41KpC20nRONpABhyn78wx6NZ6u1fN9VMy3jONTjQm1P9yo4KwldVEYOCKzjSk0yMattLsjc-H88jbGu-ZOcApjIQoDPfrUd8S_aCz_pl9KMieEKBAamusAkJQAPqUAjY9YtY1os4ILI9ZaY9S8_2S4b7x5JGutir67KqUIih4plHDO3H7yoTsK_5lHD9Krrfo5dVjfeBB0JhUYWjzoNrH0kruDDOwKpuK-USEAruiZeOzmN4aiTjMCQqEt0_8R67yBaqLv2Jt_RjhdSWekYGX4-_FzbRPcyXKUNgrcLwyg6Odl1jsCfKyeoBpUAsZDmwVIyjnvoGQKA-dM0kEmjsN8C7BximsXutLurNdYGNkarDuXv93ct2Uw2dkKqImpUSHEx1PWax6GrW8lyLmguSqEW4LJAUAjQpP0b5hpLpeg9rtiplfNMbZJyBL-SBTuEzi38_iM_uKNu1-zYEcaRmP7d-qe16d8Wjkv8v62O_Px0NLtj1dcW9wnTpv0wnOvQ0WqynQoBQNisIeFJV6qxXz4ORu8tVvYkfDupyz30eG92w09DxP3ZoyN7VWg2lybtKqyaxnFD7zeIJBz0a_ykh2zjW3wAWjK0tP5Lx3pqjzhNX_cjw2Mvz5O-WZSXfdBN9WzDSLifbmVD-HmuUcYk3Wk_2hcSGUUwATZtdj1xvoPnr2M4oWyfJiq0q15c2lSF3lxv0eqDboocOaQye2_6wQZUATpRMa0R_MMZUj0I3grYOvL-dwP_vGKPcbzBsZD2OTUS8o_321FsN0eWAbX3DHgM-ti8JYYpRlvQMtLgQ5KbayJ6rm7gcL4i70GbfIEGjXzi1rtk-is9YNIN4FBsOhbQtmMyljdoSYAPr5tzA3oxlxCBG59nNSsXRaVt8B_r5UTBbTLYRxXYXFt57TMPyteNT5q7s9IxhuQbA83TD9hOSXCeAK0kQLF_0aGfieteC1pC2LyDaH-_mcMmrbMq-pZit4FWpuP01dLUlbAuSQI8ykdtW9dS99vdhUXe_4VLXhKGD9AktZchm8qV4EvMeSzozvUlQw2AavXIGfJga0l6AjkyvkAX8Ni3IetnGz43zk8zIzNmrJQ_CPCGyaPb9DN-R5_GaLox4LhWVu4CUXiwQ5KzOVfzfETvSLZ90OKB6PWulBQ7qcaKdkKaxG8UEtJEZqzvOsUjsoJ72VEgBxVULDG0SfD230gpt1rUVPtF8_5MsJKD3WeuzevKugf_Mrc5zhHgIc4w07vABuQbUhhvi42UK3pqw2glJdLdilNdMrBHMuoockfqAiXYgGBpeLcrW5G0v6x1bWrdWX6Bc6_KFF2yEZ0UhgprSWUc8CBHEggzbDYGierMpwlOqCbj8qTxHTcSlev0bSjpx8PELEb5_tUeYWfcpIGdQeC7Ao7-rDzBUiS4zeadDEmTHnTybabw2GYnGUtQvUOd4ToPNOdgFaMEIQ1Vy4bHRbNqj_Jdb3reWA4EQ0DbQjUd2FOSL2_f_L-4fUCBwYVpdY7B_l1NGWLpvS1FHvgDNGuF7HyWf-GzDLRPGVGL4UYQfB2pTOnrUGlmZifyl07bqqCtk6eKBn047Er2ecCiXJKVe7USzvUcpz53V0xz7eauzBYLyZ9PrIAGZC-lG2IF78csN9rbpnr6vQYjfavFQQaeyUt6kCA3A2cwyx_FY9IRT0t9CMYaF8LdJ7UlqztIxt2OqlqG2qcJqlJhjFKtjxSgCrDevIU-1yN8crvjEnZ-Vclu0U9BUS4gEHUjgsQRfgijWfzPBVmb4sydGDdXWVlHVBnCWQB_24e2IcEqbWFt55-VBAH-T1wvJtLHny5N4ldUCn8SLU5s7_i9TT31Znd3dnb1Pj2ncUjysIZ9023iALbrKlxZkq2RmDwNKO1HEEh-guWOQ2y0_1QlkcSDERfKf5IfWauX9FmXXd5m1hrf5JBFfq61XL6GbxePezjhMtk0w2_Gf3JQPaBLOM4PzuvsHJHU75-LHIDbi2tppGTiMHoiqoBiq4ZSngc_tE7txYypkZZj0nEvDj274q6GMpIVylLw0-GQ994ARrrICIP3qHUpQuvUNtVRBXq0azUljBZzNxw9b5wxALBeHrr0uadETkSCOpQyyghqohdbTWX9KS-M2u92_Atb0Rz0BnmwHTjdSM384Y_ZISTHOFiZHluQDy20kstc762ubHyVoiE4jQrkZ_H2lke_30zY_YmJ7df29eG3asM2K3JuCQv9_B6B1UM9FwzEWL5X9HzbWhr0MTiNkF3aDQXBEJGQmQzF6L33oobApL-LTb_m2iKQyj4Wr7VI6Z3EMtrsTkCn5kyt4GoxujIFbCRNvXw-yBNUdZBU8sjZ2k2c8ZwUvUfoyTykxkw12kKiGVEsXWoe6QV9JOApvlyw_BFvlyjp9iv5Y4XdDgwAatcm-geZXTB5ehGndiyNEzGveRBK4pG83GFuwlpRHBV8knyKC2IuhQC3A_pIqq7epPFwUEmbsAIE7C3vkSGirwQIuc5TFQW_TFeMJGRv7VnKBLEseE61h_p2GdJBlEcO2N1SeRDSwQulWvn6lxXmgNRD7TKG5tVMQAnkdf4bUuFny4JVtdb-WZKXqFb0PoJ98nxmeecuQz49DdBVMqJw-uB_2-DSU4TtCc82eyfvI3yZRf1rARZ_c_6u1uQZLuZNnR83w8orzS9pYddBZ5mlBPlIAxEdRRpPTnkschF--YH-XRFVrDZO7y60blhmItfG-zzNivUBFPEBBXhRMDJaX31j4imBN2tN\"}],\"role\":\"model\"}",
+    "latency_ms": 3154,
+    "input_tokens": 4042,
+    "output_tokens": 307,
+    "thinking_tokens": 699
+   }
+  ],
+  "tool_calls": [
+   {
+    "name": "get_order",
+    "args": {
+     "order_id": "ORD-10473"
+    },
+    "result": {
+     "found": true,
+     "reason": null,
+     "order_id": "ORD-10473",
+     "status": "delivered",
+     "placed_at": "2026-11-04",
+     "shipped_at": "2026-11-06",
+     "delivered_at": "2026-11-09",
+     "days_since_shipped": 9,
+     "days_since_delivered": 6,
+     "items": [
+      {
+       "line_no": 1,
+       "sku": "EL-101",
+       "name": "Bluetooth Speaker",
+       "category": "electronics",
+       "qty": 1,
+       "unit_price_cents": 3499,
+       "line_total_cents": 3499,
+       "final_sale": false
+      }
+     ],
+     "subtotal_cents": 3499,
+     "shipping_cents": 599,
+     "total_paid_cents": 4098,
+     "refunded_cents": 1000,
+     "refundable_left_cents": 3098
+    }
+   },
+   {
+    "name": "get_customer",
+    "args": {},
+    "result": {
+     "found": true,
+     "reason": null,
+     "customer_id": "C0029",
+     "name": "Ava Whitlock",
+     "tier": "standard",
+     "member_since": "2023-08-01",
+     "orders": [
+      {
+       "order_id": "ORD-10037",
+       "placed_at": "2026-05-17",
+       "status": "shipped",
+       "delivered_at": null,
+       "item_names": [
+        "Bamboo Cutting Board"
+       ]
+      },
+      {
+       "order_id": "ORD-10073",
+       "placed_at": "2026-05-30",
+       "status": "delivered",
+       "delivered_at": "2026-06-03",
+       "item_names": [
+        "Leather Belt",
+        "Clearance Sunglasses",
+        "Camping Lantern"
+       ]
+      },
+      {
+       "order_id": "ORD-10129",
+       "placed_at": "2026-06-22",
+       "status": "delivered",
+       "delivered_at": "2026-06-30",
+       "item_names": [
+        "Smart Watch",
+        "Power Bank 20000mAh"
+       ]
+      },
+      {
+       "order_id": "ORD-10212",
+       "placed_at": "2026-07-25",
+       "status": "delivered",
+       "delivered_at": "2026-07-29",
+       "item_names": [
+        "Yoga Mat"
+       ]
+      },
+      {
+       "order_id": "ORD-10246",
+       "placed_at": "2026-08-06",
+       "status": "delivered",
+       "delivered_at": "2026-08-13",
+       "item_names": [
+        "Chef's Knife",
+        "Trail Backpack 30L"
+       ]
+      },
+      {
+       "order_id": "ORD-10473",
+       "placed_at": "2026-11-04",
+       "status": "delivered",
+       "delivered_at": "2026-11-09",
+       "item_names": [
+        "Bluetooth Speaker"
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "name": "list_refunds",
+    "args": {
+     "order_id": "ORD-10473"
+    },
+    "result": {
+     "found": true,
+     "reason": null,
+     "order_id": "ORD-10473",
+     "refunds": [
+      {
+       "refund_id": "RF-0053",
+       "amount_cents": 1000,
+       "reason": "goodwill",
+       "created_at": "2026-11-11"
+      }
+     ],
+     "total_refunded_cents": 1000
+    }
+   }
+  ]
+ },
+ "expected": {
+  "decision": "auto_approved",
+  "flags": [
+   "amount_capped"
+  ],
+  "correct": true,
+  "action": "refund",
+  "order_id": "ORD-10473",
+  "amount_cents": 3098
+ }
+}

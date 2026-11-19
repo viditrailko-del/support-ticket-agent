@@ -1,0 +1,173 @@
+{
+ "name": "someone_elses_order",
+ "group": "Everyday tickets",
+ "title": "Someone else's order",
+ "blurb": "The order number belongs to another customer. The tools are scoped to the sender, so the agent is told the order does not exist (no data leaks) and asks for the right number.",
+ "label_id": "t42",
+ "source_run": "agent_20261118T053308Z",
+ "email": {
+  "from_email": "olga.kowal@example.com",
+  "subject": "Refund for earbuds ORD-10476",
+  "body": "Hi, please refund the two pairs of wireless earbuds from order ORD-10476. Thanks, Olga",
+  "received_at": "2026-11-15T10:00:00+00:00",
+  "attachments": []
+ },
+ "recorded": {
+  "classify_model": "gemini-3.5-flash-lite",
+  "classify_prompt_version": "classify_v1",
+  "agent_model": "gemini-3.5-flash-lite",
+  "agent_prompt_version": "agent_v1",
+  "classify": [
+   {
+    "raw_output": "{\n  \"category\": \"refund_request\",\n  \"urgency\": \"normal\",\n  \"reason\": \"The customer is asking for a refund for two pairs of earbuds because they changed their mind, with no mention of damage or legal action.\"\n}",
+    "latency_ms": 1870,
+    "input_tokens": 448,
+    "output_tokens": 55,
+    "thinking_tokens": null
+   }
+  ],
+  "agent": [
+   {
+    "raw_output": "{\"parts\":[{\"function_call\":{\"id\":\"call_15388359826603528771\",\"args\":{},\"name\":\"get_customer\"},\"thought_signature\":\"EqECCp4CAWkUfRM8okBAeYMtkSaNHDcba6nNVk3pHwGZ41-toudcr0w8u1J5QyNJ9HjeL-jdM6LCoQDOMMvFQR5ITWDrC0wHI1_tjsf4i2SAnEL_egRIX0KKhLijDEMIp-kgJLzNS1f046HVixth5FBQJXNtgr2gOkc3rEY39xvpub9ZIiT7qDb2UYNNEk28r_zo21zv5DLmOdE-S8z_2xvSo1ZqcPaFh634kOkGMWtqguLBXB3dU2Rv6A-vlm3x0aUGdOndjvXyMeg7Lx03IiBK1s4QoFZr9IqfBY5XxAthRkwWJb5lFp6BmrN_MSSVOTiAKWMWIqHZwUhYvvbtt_S-J_PiW9PsZHBkMXv5Fbf4KU2RShBbgGGtB1ShjAoErObKcA==\"},{\"function_call\":{\"id\":\"call_15388359826603530208\",\"args\":{\"order_id\":\"ORD-10476\"},\"name\":\"get_order\"}}],\"role\":\"model\"}",
+    "latency_ms": 2360,
+    "input_tokens": 3020,
+    "output_tokens": 34,
+    "thinking_tokens": 50
+   },
+   {
+    "raw_output": "{\"parts\":[{\"function_call\":{\"id\":\"call_4397364352092027236\",\"args\":{\"reply_draft\":\"Hi Olga,\\n\\nThank you for reaching out. We couldn't find an order matching ORD-10476 on your account. Could you please double-check the order number and let us know so we can assist you with your refund request?\\n\\nBest regards,\\nCustomer Support\",\"order_id\":null,\"include_shipping\":false,\"items\":[],\"rationale\":\"The order number ORD-10476 provided by the customer does not match any order on their account. Per policy ACC-4, we must ask for the correct order number before taking any action.\",\"citations\":[{\"quote\":\"When a customer does not give an order number, or the number does not match an order on their account, we ask for the correct order number before acting.\",\"rule_id\":\"ACC-4\"}],\"action\":\"reply_only\",\"amount_cents\":null},\"name\":\"submit_proposal\"},\"thought_signature\":\"EpQECpEEAWkUfRPAidGBzU_A5EnV_atV6AUC_jOGCSRlyX7pD1xprle-Tsy_pUJiSjBcWqQOzsBOHcMplISyNBaV9ntlqs7T7e1BVI17qqxns14FI1wPNmsFPXMymY_AnAphKfx6h4_TFVFUacLhandCWlNCnMYTJcxzT-pxPUKKgY8HW04L_ZNHm6-SFpW-3xuSvsafsBIDxFsGEFrzIMdrTWPTt4AuhaGQmW37S5BHSzcYBR9P1J6rhNWNdMVKA4EiGZHENARWjM-iBqklYy8mm2Z-0A2oJAWTRQlCPWMYXHoE-PP0HpHHUsLzetxocppnSPQ8bAwB2laPS0JRTCwGayahChk9gbiRbEMj8gvW1hjfNGTIThIjia4laR744ncSeI_qS8d1OIjX3zNj1u8jJJQlhfoFWgbV75k36tI4itRk0Ci8dzOkvPMb4B6whg_NsVTMBHRvacPEL2R1SDtK6y1Azum5jyHl79QbmTWU5PtLBVQ8gJ-uBVUvNfyNkucCzJLlebm1WL1rbQt-ovHN5T_ns6wdHQP6XeQKJWqKQZsudZ-uP3m0zWFUrZ155_QqPHOxK1_D1Apmo4ItjiZnAvtAUHiQFrXeE7MJtGqk4-AxYmngvHC4L1UTwOBsw8CfJKjBX4mKFO1VvAU0GjVsWW4lRtjygBNUaq8wSdmfw8UExMU29eAk6KscVjwtYqngWCvUZw==\"}],\"role\":\"model\"}",
+    "latency_ms": 2657,
+    "input_tokens": 3755,
+    "output_tokens": 203,
+    "thinking_tokens": 99
+   }
+  ],
+  "tool_calls": [
+   {
+    "name": "get_customer",
+    "args": {},
+    "result": {
+     "found": true,
+     "reason": null,
+     "customer_id": "C0053",
+     "name": "Olga Kowal",
+     "tier": "standard",
+     "member_since": "2025-12-22",
+     "orders": [
+      {
+       "order_id": "ORD-10023",
+       "placed_at": "2026-05-09",
+       "status": "delivered",
+       "delivered_at": "2026-05-13",
+       "item_names": [
+        "Desk Lamp",
+        "Wool Socks (3-pack)"
+       ]
+      },
+      {
+       "order_id": "ORD-10137",
+       "placed_at": "2026-06-26",
+       "status": "delivered",
+       "delivered_at": "2026-07-05",
+       "item_names": [
+        "Insulated Water Bottle",
+        "Yoga Mat"
+       ]
+      },
+      {
+       "order_id": "ORD-10142",
+       "placed_at": "2026-06-28",
+       "status": "delivered",
+       "delivered_at": "2026-07-02",
+       "item_names": [
+        "Smart Watch",
+        "Bluetooth Speaker",
+        "French Press"
+       ]
+      },
+      {
+       "order_id": "ORD-10304",
+       "placed_at": "2026-08-29",
+       "status": "delivered",
+       "delivered_at": "2026-09-03",
+       "item_names": [
+        "Clearance Phone Case",
+        "Camping Lantern"
+       ]
+      },
+      {
+       "order_id": "ORD-10308",
+       "placed_at": "2026-08-29",
+       "status": "delivered",
+       "delivered_at": "2026-09-03",
+       "item_names": [
+        "Bluetooth Speaker",
+        "Chef's Knife"
+       ]
+      },
+      {
+       "order_id": "ORD-10343",
+       "placed_at": "2026-09-11",
+       "status": "delivered",
+       "delivered_at": "2026-09-15",
+       "item_names": [
+        "Wool Socks (3-pack)",
+        "Smart Watch",
+        "Scented Candle"
+       ]
+      },
+      {
+       "order_id": "ORD-10355",
+       "placed_at": "2026-09-15",
+       "status": "delivered",
+       "delivered_at": "2026-09-21",
+       "item_names": [
+        "French Press"
+       ]
+      },
+      {
+       "order_id": "ORD-10474",
+       "placed_at": "2026-11-04",
+       "status": "delivered",
+       "delivered_at": "2026-11-08",
+       "item_names": [
+        "Cotton Throw Blanket"
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "name": "get_order",
+    "args": {
+     "order_id": "ORD-10476"
+    },
+    "result": {
+     "found": false,
+     "reason": "no order with this id on the sender's account",
+     "order_id": null,
+     "status": null,
+     "placed_at": null,
+     "shipped_at": null,
+     "delivered_at": null,
+     "days_since_shipped": null,
+     "days_since_delivered": null,
+     "items": [],
+     "subtotal_cents": null,
+     "shipping_cents": null,
+     "total_paid_cents": null,
+     "refunded_cents": null,
+     "refundable_left_cents": null
+    }
+   }
+  ]
+ },
+ "expected": {
+  "decision": "auto_approved",
+  "flags": [],
+  "correct": true,
+  "action": "reply_only",
+  "order_id": null,
+  "amount_cents": null
+ }
+}
