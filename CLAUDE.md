@@ -293,6 +293,17 @@ Render (prod Dockerfile) + Neon Postgres -> tests -> README link + screenshots. 
   the recorded state; live tickets are never touched. `tests/test_demo_replay.py` checks each scenario still
   ends at its `expected` decision; change a check/shop/policy that moves one -> rebuild and re-read the blurb.
 - Live-mode customers must not be any replay scenario's customer (their tickets would make replays diverge).
+- Built (live): `app/demo/live.py` + `POST /demo/live` {customer_id, subject, body}, `GET /demo/customers`,
+  `GET /demo/status`. 7 customers (`LIVE_CUSTOMERS`, in no labeled ticket, so in no scenario: tested); the
+  server sets the sender address and `received_at` = `SHOP_TODAY` (setting `shop_today`, tested against
+  shop.json) with the current time of day. Agent on `DEMO_LIVE_MODEL` (flash-lite, main model as fallback).
+  Caps: `DEMO_LIVE_DAILY_LIMIT` (30) for the whole demo + `DEMO_LIVE_PER_IP_PER_HOUR` (5); in-memory, re-read
+  from the DB (today's tickets classified by a non-replay model) on the first request of a UTC day, so a
+  restart doesn't reset it. POST /tickets spends the same quota while DEMO_MODE is on. 429 when used up.
+  Smoke 2026-11-19 (flash-lite): C0006 "e-reader ORD-10329, 63 days" -> reply_only citing REF-1, auto, 3 model
+  calls, ~6s.
+- Deploy note: behind Render's proxy, uvicorn needs `--forwarded-allow-ips='*'` (or the proxy's range) or
+  every visitor has the proxy's IP and the per-IP cap becomes one shared cap.
 
 ## Scope discipline
 
@@ -308,7 +319,7 @@ Build in phase order. No auth, queues, frontend, real email or real payments unt
 | 5 | Eval harness (unsafe auto-actions headline) | done (flash-lite: 1 unsafe auto-action vs 2 without guardrails, 61/63 correct) |
 | 6 | Hardening: logging, Docker prod, README numbers, CI | done (CI green on GitHub) |
 | 7 | Fixes driven by the eval | started (2 fixes: unsafe auto-actions 1 -> 0 on the frozen run) |
-| 8 | Public live demo | started (replay mode: 9 scenarios, no Gemini calls) |
+| 8 | Public live demo | started (replay mode: 9 scenarios, no Gemini calls; live mode: 7 customers, capped) |
 
 Update the Status column when a phase is done.
 

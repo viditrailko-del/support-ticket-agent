@@ -1,3 +1,4 @@
+from datetime import date
 from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -42,6 +43,14 @@ class Settings(BaseSettings):
     # Public live demo (Phase 8). Off everywhere except the demo deployment: the /demo/* routes answer 404
     # unless DEMO_MODE=true.
     demo_mode: bool = False
+    # Live mode spends real Gemini quota (~3-6 calls per ticket), so it is capped: per day for the whole demo,
+    # and per visitor IP per hour. POST /tickets counts too while DEMO_MODE is on.
+    demo_live_daily_limit: int = 30
+    demo_live_per_ip_per_hour: int = 5
+    demo_live_model: str = "gemini-3.5-flash-lite"  # the agent's model for live tickets (main model = fallback)
+    # The fake shop's "today" (data/shop.json shop_today): live tickets are received on it so every window
+    # and day count matches the seeded data.
+    shop_today: date = date(2026, 11, 15)
 
 
 @lru_cache
