@@ -12,9 +12,7 @@ an eval harness counts **unsafe auto-actions** (a wrong action executed with no 
 hand-labeled tickets, including 8 prompt-injection attempts.
 
 The shop is fake and deterministic (seeded generator: 200 customers, 500 orders, 55 past refunds, no real
-people), with 10 policy pages and 32 rules written for it. Built with [Claude Code](https://claude.com/claude-code)
-as a pair programmer. I made the design and scope decisions, verified every ticket label by hand, and
-reviewed the changes.
+people), with 10 policy pages and 32 rules written for it. I architected the system, designed the deterministic guardrail rules, built the 63-ticket evaluation harness, and verified every label and edge case by hand using Claude Code as a pair-programming tool during implementation.
 
 ## Try it: live demo
 
